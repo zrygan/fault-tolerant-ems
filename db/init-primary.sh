@@ -9,3 +9,4 @@ psql -v ON_ERROR_STOP=1 -v repl_pass="$REPL_PASSWORD" \
 EOSQL
 
 echo "host replication replicator 172.28.1.15/32 scram-sha-256" >> "$PGDATA/pg_hba.conf"
+echo "host replication replicator 172.28.1.14/32 scram-sha-256" >> "$PGDATA/pg_hba.conf"
