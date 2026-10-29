@@ -1,0 +1,67 @@
+services:
+  db-primary:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    
+    secrets:
+      - db_password
+      - repl_password
+    
+    command:
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c hot_standby=on
+
+    volumes:
+      - primary-data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U app -d appdb"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  db-replica:
+    image: postgres:17
+    user: postgres
+    secrets:
+      - repl_password
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          export PGPASSWORD="$$(cat /run/secrets/repl_password)"
+          pg_basebackup -h db-primary -U replicator -D /var/lib/postgresql/data -R -X stream -P
+          chmod 0700 /var/lib/postgresql/data
+        fi
+        exec postgres
+    
+    volumes:
+      - replica-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U app -d appdb"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+volumes:
+  primary-data:
+  replica-data:
+
+secrets:
+  db_password:
+    environment: DB_PASSWORD
+  repl_password:
+    environment: REPL_PASSWORD
