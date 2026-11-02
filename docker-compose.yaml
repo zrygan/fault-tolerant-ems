@@ -1,0 +1,172 @@
+services:
+
+  view:
+    build: ./view
+    environment:
+      AUTH_ADDRESS: "172.28.0.11:9090"
+      GRADES_ADDRESS: "172.28.0.12:9090"
+      COURSES_ADDRESS: "172.28.0.13:9090"
+    networks:
+      frontend:
+        ipv4_address: 172.28.0.10
+    ports:
+      - "3000:8080"
+
+  auth:
+    build: ./auth
+    secrets:
+      - db_password
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_GRPC_SERVER_PORT: "9090"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+    networks:
+      frontend:
+        ipv4_address: 172.28.0.11
+      backend:
+        ipv4_address: 172.28.1.11
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    
+  grades:
+    build: ./grades
+    secrets:
+      - db_password
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_GRPC_SERVER_PORT: "9090"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+    networks:
+      frontend:
+        ipv4_address: 172.28.0.12
+      backend:
+        ipv4_address: 172.28.1.12
+    depends_on:
+      db-primary:
+        condition: service_healthy
+
+  courses:
+    build: ./courses
+    secrets:
+      - db_password
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_GRPC_SERVER_PORT: "9090"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+    networks:
+      frontend:
+        ipv4_address: 172.28.0.13
+      backend:
+        ipv4_address: 172.28.1.13
+    depends_on:
+      db-primary:
+        condition: service_healthy
+
+  db-primary:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    
+    secrets:
+      - db_password
+      - repl_password
+    
+    command:
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c hot_standby=on
+
+    volumes:
+      - primary-data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+
+    networks:
+      backend:
+        ipv4_address: 172.28.1.14
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U app -d appdb"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  db-replica:
+    image: postgres:17
+    user: postgres
+    secrets:
+      - repl_password
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          export PGPASSWORD="$$(cat /run/secrets/repl_password)"
+          pg_basebackup -h 172.28.1.14 -U replicator -D /var/lib/postgresql/data -R -X stream -P
+          chmod 0700 /var/lib/postgresql/data
+        fi
+        exec postgres
+    
+    volumes:
+      - replica-data:/var/lib/postgresql/data
+
+    networks:
+      backend:
+        ipv4_address: 172.28.1.15
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U app -d appdb"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-watchdog:
+    image: postgres:17
+    command: ["bash", "/scripts/watchdog.sh"]
+    volumes:
+      - ./watchdog:/scripts:ro        
+    secrets:
+      - db_password
+    networks:
+      backend:
+        ipv4_address: 172.28.1.16
+    depends_on:
+      db-primary:
+        condition: service_healthy
+      db-replica:
+        condition: service_healthy
+
+
+volumes:
+  primary-data:
+  replica-data:
+
+secrets:
+  db_password:
+    environment: DB_PASSWORD
+  repl_password:
+    environment: REPL_PASSWORD
+
+networks:
+  frontend:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  backend:
+    ipam:
+      config:
+        - subnet: 172.28.1.0/24
