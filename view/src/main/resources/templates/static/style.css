@@ -1,0 +1,136 @@
+:root {
+    --main-gray: #E6E3DE;
+    --darker-gray: #CDCAC5;
+    --off-white: #F3F1ED;
+
+    --text: #4D5758;
+    --dark: #2C2C2C;
+
+    --accent: #478778;
+
+    --font: "Inter", sans-serif;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font);
+    background: var(--main-gray);
+    color: var(--text);
+}
+
+h1 {
+    color: var(--dark);
+}
+
+#log-in {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+}
+
+#log-in-form {
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    gap: 1em;
+}
+
+#page-link {
+    font-size: 0.9em;
+    color: var(--accent);
+}
+
+#input-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+}
+
+input[type="text"] {
+    font-family: var(--font);
+    padding: 1em;
+    border-radius: 0.5em;
+    border: 1px solid var(--darker-gray);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.25s ease;
+}
+
+input[type="text"]:focus {
+    outline: none; 
+    border: 2px solid var(--accent); 
+    color: var(--dark); 
+    caret-color: var(--accent); 
+}
+
+button {
+    font-family: var(--font);
+    background: var(--off-white);
+    border: 1px solid var(--darker-gray);
+    padding: 1em;
+    border-radius: 0.5em;
+    transition: background 0.25s ease, color 0.25s ease;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1em;
+}
+
+button:hover {
+    background: var(--accent);
+    color: var(--off-white);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5em 2em;
+    background-color: var(--accent);
+    color: var(--off-white);
+}
+
+.site-name {
+    font-weight: 600;
+    font-size: larger;
+}
+
+#header-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+}
+
+.nav-links {
+    display: flex;
+}
+
+.nav-links a {
+    background-color: var(--accent);
+    border-radius: 2em;
+    text-decoration: none;
+    color: var(--off-white);
+    font-weight: 500;
+    padding: 0.5em 1em;
+    transition: background-color 0.25s ease;
+}
+
+.nav-links a:hover {
+    background-color: #3d7a6c;
+}
+
+.circle {
+    width: 2.2em;
+    height: 2.2em;
+    background-color: var(--off-white);
+    border-radius: 50%;
+}
+
+.dashboard-main {
+    padding: 1em 2em;
+}
