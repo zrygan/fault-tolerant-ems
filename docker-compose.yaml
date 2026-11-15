@@ -1,7 +1,9 @@
 services:
 
   view:
-    build: ./view
+    build:
+      context: .
+      dockerfile: view/Dockerfile
     environment:
       AUTH_ADDRESS: "172.28.0.11:9090"
       GRADES_ADDRESS: "172.28.0.12:9090"
@@ -13,9 +15,12 @@ services:
       - "3000:8080"
 
   auth:
-    build: ./auth
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
     secrets:
       - db_password
+      - jwt_secret
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
       SPRING_DATASOURCE_USERNAME: app
@@ -32,9 +37,12 @@ services:
         condition: service_healthy
     
   grades:
-    build: ./grades
+    build:
+      context: .
+      dockerfile: grades/Dockerfile
     secrets:
       - db_password
+      - jwt_secret
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
       SPRING_DATASOURCE_USERNAME: app
@@ -51,9 +59,12 @@ services:
         condition: service_healthy
 
   courses:
-    build: ./courses
+    build:
+      context: .
+      dockerfile: courses/Dockerfile
     secrets:
       - db_password
+      - jwt_secret
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://172.28.1.14:5432,172.28.1.15:5432/appdb?targetServerType=preferPrimary
       SPRING_DATASOURCE_USERNAME: app
@@ -160,6 +171,8 @@ secrets:
     environment: DB_PASSWORD
   repl_password:
     environment: REPL_PASSWORD
+  jwt_secret:
+    environment: JWT_SECRET
 
 networks:
   frontend:

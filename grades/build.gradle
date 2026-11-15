@@ -43,3 +43,10 @@ tasks.named('test') {
 jar {
     enabled = false
 }
+sourceSets {
+    main {
+        proto {
+            srcDir('../proto')
+        }
+    }
+}
