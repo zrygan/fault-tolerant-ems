@@ -1,20 +1,20 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Log-in</title>
+        <title>Sign up</title>
 
-        <link rel="stylesheet" href="static/style.css" />
+        <link rel="stylesheet" href="../static/style.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     </head>
     <body>
         <main id="log-in">
-            <h1>Log-in</h1>
+            <h1>Sign Up</h1>
             <form id="log-in-form" action="" method="POST">
                 <div id="input-content">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email" placeholder="Enter your email" required>
                 </div>
 
                 <div id="input-content">
@@ -22,9 +22,14 @@
                     <input type="text" id="password" name="password" placeholder="Enter your password" required>
                 </div>
 
+                <div id="input-content">
+                    <label for="password">Confirm your password:</label>
+                    <input type="text" id="password" name="password" placeholder="Re-enter your password" required>
+                </div>
+
                 <button type="submit">Submit</button>
             </form>
-            <a id="page-link" href="#">Don't have an account? Sign up instead.</a>
+            <a id="page-link" href="#">Already have an account? Log-in instead.</a>
         </main>
     </body>
 </html>
