@@ -1,4 +1,4 @@
-syntax = "proto3"
+syntax = "proto3";
 
 package ems.courses;
 
@@ -6,26 +6,36 @@ option java_multiple_files = true;
 option java_package = "com.ems.proto.courses";
 
 service CourseService{
-
+    rpc ListSection (ListSectionRequest) returns (ListSectionResponse);
+    rpc EnrollCourse (EnrollCourseRequest) returns (EnrollCourseResponse);
+    rpc ListEnrollments (ListEnrollmentRequest) returns (ListEnrollmentResponse);
 }
 
 message ListSectionRequest{
-
+    string term = 1;
+    bool mine_only = 2;
 }
 
 message ListSectionResponse{
-
+    repeated SectionInfo sections = 1;
 }
 
 message EnrollCourseRequest{
-
+    int64 section_id = 1;
 }
 
 message EnrollCourseResponse{
-
+    int64 enrollment_id = 1;
+    SectionInfo section = 2;
 }
 
-message CourseInfo{
+message ListEnrollmentRequest{}
+
+message ListEnrollmentResponse{
+    repeated SectionInfo sections = 1;
+}
+
+message SectionInfo{
     int64 id = 1;
     string course_code = 2;
     string course_title = 3;

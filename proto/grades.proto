@@ -1,4 +1,4 @@
-syntax = "proto3"
+syntax = "proto3";
 
 package ems.grades;
 
@@ -6,30 +6,46 @@ option java_multiple_files = true;
 option java_package = "com.ems.proto.grades";
 
 service GradesService{
-
+    rpc GetGrades (GetGradesRequest) returns (GetGradesReponse);
+    rpc UploadGrades (UploadGradesRequest) returns (UploadGradesReponse);
+    rpc ListGradableStudents (ListGradableStudentsRequest) returns (ListGradableStudentsResponse);
 }
 
-message GetGradesRequest{
-
-}
+message GetGradesRequest{}
 
 message GetGradesReponse{
-    
+    repeated GradeRecord grades = 1;
+}
+
+message UploadGradesRequest{
+    int64 enrollment_id = 1;
+    double grade = 2;
 }
 
 message UploadGradesReponse{
-    
+    int64 enrollment_id = 1;
+    double grade = 2;
 }
 
-message UploadGradesReponse{
-    
+message ListGradableStudentsRequest{
+    int64 section_id = 1;
 }
 
-message GradesInfo{
-    int64 id = 1;
+message ListGradableStudentsResponse{
+    repeated GradableStudent students = 1;
+}
+
+message GradeRecord{
+    int64 enrollment_id = 1;
     string course_code = 2;
     string course_title = 3;
     string section_code = 4;
     optional double grade = 5;
     string term = 6;
+}
+
+message GradableStudent{
+    int64 enrollment_id = 1;
+    string student_name = 2;
+    optional double current_grade = 3;
 }
