@@ -1,42 +1,19 @@
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8" />
         <title>Student Dashboard</title>
 
-        <link rel="stylesheet" href="../../static/style.css" />
+        <!-- <link rel="stylesheet" href="../../static/style.css" /> -->
+        <link rel="stylesheet" th:href="@{/style.css}" />
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
     </head>
     <body>
-        <header class="dashboard-header">
-            <h2 class="site-name">EnrollmentHub</h2>
-            
-            <div id="header-right">
-                <nav class="nav-links">
-                    <a href="#" data-page="home" aria-current="page">Home</a>
-                    <a href="#enroll" data-page="enroll">Enroll</a>
-                    <a href="#grades" data-page="grades">Grades</a>
-                </nav>
-                <div class="profile-menu">
-                    <button class="circle profile-trigger" id="profile" type="button"
-                            aria-expanded="false" aria-controls="icon-tooltip"></button>
-                    <div class="tooltip" id="icon-tooltip" role="dialog" hidden>
-                        <p>Lastname, Firstname</p>
-                        <p>ID: 123456789</p>
-                        <button id="logout-btn" type="button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                            </svg>
-                            Log out
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
+        <header th:replace="~{pages/components/studentHeader :: header}"></header>
 
-        <main class="dashboard-main">
+        <div id="header-placeholder"></div>
+        <main class="main-section" id="dashboard-main">
             <h2>Welcome, Name!</h2>
 
             <div>
@@ -54,6 +31,7 @@
             </div>
             <div class="tenor-gif-embed" data-postid="7810733712102416021" data-share-method="host" data-aspect-ratio="1.33155" data-width="10%"><a href="https://tenor.com/view/alien-cat-dancing-alien-dog-dancing-green-cat-dancing-green-dog-dancing-gif-7810733712102416021">Alien Cat Dancing Alien Dog Dancing GIF</a>from <a href="https://tenor.com/search/alien+cat+dancing-gifs">Alien Cat Dancing GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
         </main>
-        <script type="module" src="../../static/main.js"></script>
+        <!-- <script type="module" src="../../static/main.js"></script> -->
+        <script type="module" th:src="@{/main.js}"></script>
     </body>
 </html>

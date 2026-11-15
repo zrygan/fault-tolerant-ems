@@ -89,7 +89,7 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5em 2em;
+    padding: 0em 2em;
     background-color: var(--main-gray);
     color: var(--off-white);
     border-bottom: 1px solid var(--darker-gray);
@@ -98,7 +98,7 @@ button:hover {
 
 .site-name {
     font-weight: 700;
-    font-size: larger;
+    font-size: x-large;
     color: var(--accent);
 }
 
@@ -118,13 +118,19 @@ button:hover {
     text-decoration: none;
     color: var(--accent);
     font-weight: 500;
-    padding: 0.5em 1em;
+    padding: 1.5em 2em;
     transition: color 0.25s ease;
     font-weight: 600;
 }
 
 .nav-links a:hover {
     color: #1f574a;
+}
+
+.nav-links a[aria-current="page"] {
+    height: 100%;
+    border-bottom: 2px solid var(--accent);
+    font-weight: 700;
 }
 
 .profile-menu {
@@ -155,20 +161,31 @@ button:hover {
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
+#tooltip-details {
+    gap: 0.5em;
+}
+
 .tooltip[hidden] {
     display: none;
 }
 
 .tooltip p {
-    font-size: 1em;
+    font-size: 0.9em;
 }
 
 #logout-btn {
-    outline: none;
+    border: none;
+    border-top-width: medium;
+    border-top-style: none;
+    border-top-color: currentcolor;
     border-top: 1px solid var(--darker-gray);
-    background: var(--main-gray);
+    background: var(--off-white);
+    font-size: small;
+    font-weight: 500;
+    width: 100%;
+    border-radius: 0;
 }
 
-.dashboard-main {
+.main-section {
     padding: 1em 2em;
 }

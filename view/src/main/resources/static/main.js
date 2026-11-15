@@ -4,7 +4,15 @@ function all() {
 }
 
 function pageNav() {
+    const links = document.querySelectorAll(".nav-links a");
 
+    links.forEach((link) => {
+        if (link.pathname === location.pathname) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
 }
 
 function tooltip() {
