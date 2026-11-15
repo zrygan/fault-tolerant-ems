@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ems.auth;
+
+option java_multiple_files = true;
+option java_package = "com.ems.proto.auth";
+
+service AuthService{
+
+}
+
+enum Role{
+    ROLE_NONE = 0;
+    ROLE_STUDENT = 1;
+    ROLE_FACULTY = 2;
+}
+
+message LoginRequest{
+
+}
+
+message LoginResponse{
+
+}
+
+message UserInfo{
+    int64 id = 1;
+    string email = 2;
+    string full_name = 3;
+    Role role = 4;
+}

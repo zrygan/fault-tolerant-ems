@@ -1,0 +1,39 @@
+syntax = "proto3"
+
+package ems.courses;
+
+option java_multiple_files = true;
+option java_package = "com.ems.proto.courses";
+
+service CourseService{
+
+}
+
+message ListSectionRequest{
+
+}
+
+message ListSectionResponse{
+
+}
+
+message EnrollCourseRequest{
+
+}
+
+message EnrollCourseResponse{
+
+}
+
+message CourseInfo{
+    int64 id = 1;
+    string course_code = 2;
+    string course_title = 3;
+    int32 units = 4;
+    string section_code = 5;
+    string faculty_name = 6;
+    int32 capacity = 7;
+    int32 enrolled_count = 8;
+    bool is_open = 9;
+    string term = 10;
+}
