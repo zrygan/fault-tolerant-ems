@@ -26,3 +26,5 @@ docker compose up -d
 ```sh
 docker compose ps
 ```
+
+Once docker is running, go to `http://localhost:3000/` to access the view

@@ -6,7 +6,7 @@ LIMIT=3
 export PGPASSWORD="$(cat /run/secrets/db_password)"
 
 while true; do
-  if pg_isready -h 172.28.1.14 -p 5432 > /dev/null; then
+  if pg_isready -h 172.28.1.14 -p 5432 -U app -d appdb > /dev/null; then
     FAILS=0
   else
     FAILS=$((FAILS + 1))
