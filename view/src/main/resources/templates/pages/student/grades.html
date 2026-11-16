@@ -13,6 +13,12 @@
         <header th:replace="~{pages/components/studentHeader :: header}"></header>
         <main class="main-section" id="grades-main">
             <h3>View your grades</h3>
+            <p th:if="${error}" th:text="${error}"></p>
+            <tr th:each="g : ${grades}">
+                <td th:text="${g.courseCode}"></td>
+                <td th:text="${g.courseTitle}"></td>
+                <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
+            </tr>
         </main>
         <script type="module" th:src="@{/main.js}"></script>
     </body>

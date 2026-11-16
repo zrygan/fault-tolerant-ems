@@ -23,6 +23,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
 	testImplementation 'org.springframework.boot:spring-boot-starter-grpc-client-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
@@ -31,10 +34,9 @@ dependencies {
 }
 
 protobuf {
-	plugins {
-		grpc {
-		}
-	}
+    protoc { artifact = 'com.google.protobuf:protoc:3.25.3' }
+    plugins { grpc { artifact = 'io.grpc:protoc-gen-grpc-java:1.62.2' } }
+    generateProtoTasks { all()*.plugins { grpc {} } }
 }
 
 tasks.named('test') {
