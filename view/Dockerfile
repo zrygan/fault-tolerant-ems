@@ -7,13 +7,13 @@ COPY view/gradle/ gradle/
 COPY view/build.gradle* view/settings.gradle* ./
 RUN chmod +x gradlew
 
-RUN --mount=type=cache,target=/root/.gradle \
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     ./gradlew dependencies --no-daemon > /dev/null
 
 # copies the code
 COPY proto/ /workspace/proto/
 COPY view/src/ src/
-RUN --mount=type=cache,target=/root/.gradle \
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
     ./gradlew bootJar --no-daemon -x test && \
     cp build/libs/*.jar app.jar
 # -x test skips tests
