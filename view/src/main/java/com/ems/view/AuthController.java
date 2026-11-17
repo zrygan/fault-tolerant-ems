@@ -11,13 +11,19 @@ import io.grpc.StatusRuntimeException;
 
 import com.ems.proto.auth.AuthServiceGrpc;
 import com.ems.proto.auth.LoginRequest;
+import com.ems.proto.auth.LogoutRequest;
 import com.ems.proto.auth.Role;
 
 @Controller
 public class AuthController {
     private final AuthServiceGrpc.AuthServiceBlockingStub auth;
-    public AuthController(AuthServiceGrpc.AuthServiceBlockingStub auth) { this.auth = auth; }
+    private final GrpcAuth grpcAuth;
 
+    public AuthController(AuthServiceGrpc.AuthServiceBlockingStub auth, GrpcAuth grpcAuth) {
+        this.auth = auth;
+        this.grpcAuth = grpcAuth;
+    }
+    
     @GetMapping({"/login"})
     public String loginPage() { return "pages/login"; }
 
@@ -40,6 +46,10 @@ public class AuthController {
 
     @PostMapping("/logout")
     public String logout(HttpSession session) {
+        try {
+            grpcAuth.withToken(auth, session).logout(LogoutRequest.getDefaultInstance());
+        } catch (StatusRuntimeException ignored) {
+        }
         session.invalidate();
         return "redirect:/login";
     }

@@ -45,7 +45,7 @@ public class AuthGrpcService extends AuthServiceGrpc.AuthServiceImplBase {
 
     @Override
     public void logout(LogoutRequest req, StreamObserver<LogoutResponse> out) {
-        out.onNext(LogoutResponse.getDefaultInstance()); // tokens are stateless; the view drops its session
+        out.onNext(LogoutResponse.getDefaultInstance());
         out.onCompleted();
     }
 
