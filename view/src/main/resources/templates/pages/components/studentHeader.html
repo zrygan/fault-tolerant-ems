@@ -14,7 +14,7 @@
                         aria-expanded="false" aria-controls="icon-tooltip"></button>
                 <div class="tooltip" id="icon-tooltip" role="dialog" hidden>
                     <div id="tooltip-details">
-                        <p>Lastname, Firstname</p>
+                        <p th:text="${user?.fullName}">Lastname, Firstname</p>
                         <p>email</p>
                     </div>
                     <button id="logout-btn" type="button">
@@ -28,5 +28,6 @@
             </div>
         </div>
     </header>
+    <script type="module" th:src="@{/main.js}"></script>
 </body>
 </html>

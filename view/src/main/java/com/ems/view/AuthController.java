@@ -32,7 +32,8 @@ public class AuthController {
             return res.getUser().getRole() == Role.ROLE_FACULTY
                     ? "redirect:/faculty/dashboard" : "redirect:/student/dashboard";
         } catch (StatusRuntimeException e) {
-            ra.addFlashAttribute("error", "Invalid email or password.");
+            System.err.println("Login failed: " + e.getStatus());
+            ra.addFlashAttribute("error", "Login failed: " + e.getStatus().getCode());
             return "redirect:/login";
         }
     }

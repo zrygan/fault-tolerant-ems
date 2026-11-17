@@ -18,6 +18,7 @@ function pageNav() {
 function tooltip() {
     const profileButton = document.getElementById("profile");
     const profileTooltip = document.getElementById("icon-tooltip");
+    if (!profileButton || !profileTooltip) return;
 
     function setTooltipOpen(isOpen) {
         profileTooltip.hidden = !isOpen;

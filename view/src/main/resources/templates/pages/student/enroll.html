@@ -14,6 +14,16 @@
 
         <main class="main-section" id="enroll-main">
             <h3>Enroll in available courses</h3>
+            <tr th:each="s : ${sections}">
+            <td th:text="${s.courseCode}"></td>
+            <td th:text="${s.enrolledCount} + '/' + ${s.capacity}"></td>
+            <td>
+                <form th:action="@{/student/enroll}" method="post" th:if="${s.isOpen}">
+                    <input type="hidden" name="sectionId" th:value="${s.id}">
+                    <button>Enroll</button>
+                </form>
+            </td>
+        </tr>
         </main>
         <script type="module" th:src="@{/main.js}"></script>
     </body>
