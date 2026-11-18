@@ -42,4 +42,8 @@ public class EnrollmentService {
         return enrollmentRepo.save(enrollment);
     }
 
+    public java.util.List<Enrollment> getEnrollmentsForStudent(Long studentId) {
+        return enrollmentRepo.findByStudentId(studentId);
+    }
+
 }

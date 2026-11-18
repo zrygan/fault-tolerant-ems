@@ -36,7 +36,7 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
     @Override
     public void listSection(ListSectionRequest req, StreamObserver<ListSectionResponse> out) {
         try {
-            var rows = req.getTerm().isBlank() ? sectionRepo.findAll() : sectionRepo.findByTerm(req.getTerm());
+            var rows = req.getTerm().isBlank() ? sectionRepo.findAll(SectionRepository.SECTION_ORDER) : sectionRepo.findByTerm(req.getTerm(), SectionRepository.SECTION_ORDER);
             var response = ListSectionResponse.newBuilder();
             rows.forEach(s -> response.addSections(toProto(s)));
             out.onNext(response.build());
@@ -81,8 +81,34 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
 
 
     }
-    
-    // @Override 
+
+    @Override
+    public void listEnrollments(ListEnrollmentRequest req, StreamObserver<ListEnrollmentResponse> out) {
+        try {
+            Long studentId = JwtServerInterceptor.USER_ID.get();
+            if (studentId == null) {
+                out.onError(Status.UNAUTHENTICATED.withDescription("User context missing").asRuntimeException());
+                return;
+            }
+
+            var enrollments = enrollmentService.getEnrollmentsForStudent(studentId);
+            var response = ListEnrollmentResponse.newBuilder();
+
+            for (Enrollment e : enrollments) {
+                sectionRepo.findById(e.getSectionId()).ifPresent(s ->
+                        response.addSections(toProto(s))
+                );
+            }
+
+            out.onNext(response.build());
+            out.onCompleted();
+        } catch (Exception e) {
+
+            out.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
+
+    // @Override
     // public void getEnrolledClasses() {
         
     // }
