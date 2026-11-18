@@ -18,18 +18,18 @@
                 <thead>
                 <tr>
                     <th>Course</th>
-                    <th>Enrolled / Capacity</th>
+                    <th>Capacity</th>
                     <th>Action</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="s : ${sections}">
                 <td th:text="${s.courseCode}"></td>
-                <td th:text="${s.enrolledCount} + '/' + ${s.capacity}"></td>
+                <td style="text-align: center;" th:text="${s.enrolledCount} + '/' + ${s.capacity}"></td>
                 <td>
                 <form th:action="@{/student/enroll}" method="post" th:if="${s.isOpen}">
                     <input type="hidden" name="sectionId" th:value="${s.id}">
-                    <button>Enroll</button>
+                    <button style = " padding: 6px 10px;">Enroll</button>
                 </form>
                 </td>
                 </tr>

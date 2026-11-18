@@ -31,7 +31,12 @@ public class EnrollmentService {
         enrollment.setSectionId(sectionId);
         enrollment.setEnrolledAt(java.time.OffsetDateTime.now());
 
-        section.setEnrolledCount(section.getEnrolledCount() + 1);
+        int newCount = section.getEnrolledCount() + 1;
+        section.setEnrolledCount(newCount);
+
+        if(newCount>= section.getCapacity()){
+            section.setIsOpen(false);
+        }
 
         sectionRepo.save(section);
         return enrollmentRepo.save(enrollment);
