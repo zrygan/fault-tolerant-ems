@@ -107,132 +107,132 @@ INSERT INTO sections (course_id, term, section_code, faculty_id, capacity, enrol
 (20, '2026-2027 T1', 'S12', 3, 40, 0, TRUE);
 
 -- 4. Insert Enrollments
-INSERT INTO enrollments (id, student_id, section_id) VALUES
-(1, 11, 8),
-(2, 11, 2),
-(3, 11, 18),
-(4, 11, 16),
-(5, 11, 15),
-(6, 12, 7),
-(7, 12, 35),
-(8, 12, 6),
-(9, 13, 28),
-(10, 13, 3),
-(11, 13, 2),
-(12, 13, 6),
-(13, 13, 14),
-(14, 14, 33),
-(15, 14, 39),
-(16, 14, 2),
-(17, 15, 13),
-(18, 15, 35),
-(19, 15, 27),
-(20, 15, 15),
-(21, 15, 29),
-(22, 16, 18),
-(23, 16, 1),
-(24, 16, 11),
-(25, 16, 28),
-(26, 16, 22),
-(27, 17, 10),
-(28, 17, 14),
-(29, 17, 22),
-(30, 17, 7),
-(31, 18, 25),
-(32, 18, 7),
-(33, 18, 23),
-(34, 19, 39),
-(35, 19, 17),
-(36, 19, 3),
-(37, 19, 30),
-(38, 20, 8),
-(39, 20, 25),
-(40, 20, 6),
-(41, 20, 36),
-(42, 20, 19),
-(43, 21, 40),
-(44, 21, 24),
-(45, 21, 37),
-(46, 21, 13),
-(47, 21, 5),
-(48, 22, 15),
-(49, 22, 19),
-(50, 22, 6),
-(51, 23, 7),
-(52, 23, 25),
-(53, 23, 18),
-(54, 24, 24),
-(55, 24, 11),
-(56, 24, 23),
-(57, 24, 14),
-(58, 25, 18),
-(59, 25, 5),
-(60, 25, 39),
-(61, 25, 11),
-(62, 25, 35),
-(63, 26, 16),
-(64, 26, 11),
-(65, 26, 30),
-(66, 26, 25),
-(67, 26, 18),
-(68, 27, 36),
-(69, 27, 15),
-(70, 27, 21),
-(71, 27, 4),
-(72, 27, 3),
-(73, 28, 26),
-(74, 28, 18),
-(75, 28, 5),
-(76, 28, 14),
-(77, 29, 21),
-(78, 29, 14),
-(79, 29, 32),
-(80, 29, 26),
-(81, 29, 30),
-(82, 30, 17),
-(83, 30, 9),
-(84, 30, 16);
+INSERT INTO enrollments (student_id, section_id) VALUES
+(11, 8),
+(11, 2),
+(11, 18),
+(11, 16),
+(11, 15),
+(12, 7),
+(12, 35),
+(12, 6),
+(13, 28),
+(13, 3),
+(13, 2),
+(13, 6),
+(13, 14),
+(14, 33),
+(14, 39),
+(14, 2),
+(15, 13),
+(15, 35),
+(15, 27),
+(15, 15),
+(15, 29),
+(16, 18),
+(16, 1),
+(16, 11),
+(16, 28),
+(16, 22),
+(17, 10),
+(17, 14),
+(17, 22),
+(17, 7),
+(18, 25),
+(18, 7),
+(18, 23),
+(19, 39),
+(19, 17),
+(19, 3),
+(19, 30),
+(20, 8),
+(20, 25),
+(20, 6),
+(20, 36),
+(20, 19),
+(21, 40),
+(21, 24),
+(21, 37),
+(21, 13),
+(21, 5),
+(22, 15),
+(22, 19),
+(22, 6),
+(23, 7),
+(23, 25),
+(23, 18),
+(24, 24),
+(24, 11),
+(24, 23),
+(24, 14),
+(25, 18),
+(25, 5),
+(25, 39),
+(25, 11),
+(25, 35),
+(26, 16),
+(26, 11),
+(26, 30),
+(26, 25),
+(26, 18),
+(27, 36),
+(27, 15),
+(27, 21),
+(27, 4),
+(27, 3),
+(28, 26),
+(28, 18),
+(28, 5),
+(28, 14),
+(29, 21),
+(29, 14),
+(29, 32),
+(29, 26),
+(29, 30),
+(30, 17),
+(30, 9),
+(30, 16);
 
 -- 5. Update section enrolled counts to match actual enrollments
-UPDATE sections SET enrolled_count = 1 WHERE id = 1;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 2;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 3;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 4;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 5;,
-UPDATE sections SET enrolled_count = 4 WHERE id = 6;,
-UPDATE sections SET enrolled_count = 4 WHERE id = 7;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 8;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 9;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 10;,
-UPDATE sections SET enrolled_count = 4 WHERE id = 11;,
-UPDATE sections SET enrolled_count = 0 WHERE id = 12;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 13;,
-UPDATE sections SET enrolled_count = 5 WHERE id = 14;,
-UPDATE sections SET enrolled_count = 4 WHERE id = 15;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 16;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 17;,
-UPDATE sections SET enrolled_count = 6 WHERE id = 18;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 19;,
-UPDATE sections SET enrolled_count = 0 WHERE id = 20;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 21;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 22;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 23;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 24;,
-UPDATE sections SET enrolled_count = 4 WHERE id = 25;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 26;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 27;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 28;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 29;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 30;,
-UPDATE sections SET enrolled_count = 0 WHERE id = 31;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 32;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 33;,
-UPDATE sections SET enrolled_count = 0 WHERE id = 34;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 35;,
-UPDATE sections SET enrolled_count = 2 WHERE id = 36;,
-UPDATE sections SET enrolled_count = 1 WHERE id = 37;,
-UPDATE sections SET enrolled_count = 0 WHERE id = 38;,
-UPDATE sections SET enrolled_count = 3 WHERE id = 39;,
+UPDATE sections SET enrolled_count = 1 WHERE id = 1;
+UPDATE sections SET enrolled_count = 3 WHERE id = 2;
+UPDATE sections SET enrolled_count = 3 WHERE id = 3;
+UPDATE sections SET enrolled_count = 1 WHERE id = 4;
+UPDATE sections SET enrolled_count = 3 WHERE id = 5;
+UPDATE sections SET enrolled_count = 4 WHERE id = 6;
+UPDATE sections SET enrolled_count = 4 WHERE id = 7;
+UPDATE sections SET enrolled_count = 2 WHERE id = 8;
+UPDATE sections SET enrolled_count = 1 WHERE id = 9;
+UPDATE sections SET enrolled_count = 1 WHERE id = 10;
+UPDATE sections SET enrolled_count = 4 WHERE id = 11;
+UPDATE sections SET enrolled_count = 0 WHERE id = 12;
+UPDATE sections SET enrolled_count = 2 WHERE id = 13;
+UPDATE sections SET enrolled_count = 5 WHERE id = 14;
+UPDATE sections SET enrolled_count = 4 WHERE id = 15;
+UPDATE sections SET enrolled_count = 3 WHERE id = 16;
+UPDATE sections SET enrolled_count = 2 WHERE id = 17;
+UPDATE sections SET enrolled_count = 6 WHERE id = 18;
+UPDATE sections SET enrolled_count = 2 WHERE id = 19;
+UPDATE sections SET enrolled_count = 0 WHERE id = 20;
+UPDATE sections SET enrolled_count = 2 WHERE id = 21;
+UPDATE sections SET enrolled_count = 2 WHERE id = 22;
+UPDATE sections SET enrolled_count = 2 WHERE id = 23;
+UPDATE sections SET enrolled_count = 2 WHERE id = 24;
+UPDATE sections SET enrolled_count = 4 WHERE id = 25;
+UPDATE sections SET enrolled_count = 2 WHERE id = 26;
+UPDATE sections SET enrolled_count = 1 WHERE id = 27;
+UPDATE sections SET enrolled_count = 2 WHERE id = 28;
+UPDATE sections SET enrolled_count = 1 WHERE id = 29;
+UPDATE sections SET enrolled_count = 3 WHERE id = 30;
+UPDATE sections SET enrolled_count = 0 WHERE id = 31;
+UPDATE sections SET enrolled_count = 1 WHERE id = 32;
+UPDATE sections SET enrolled_count = 1 WHERE id = 33;
+UPDATE sections SET enrolled_count = 0 WHERE id = 34;
+UPDATE sections SET enrolled_count = 3 WHERE id = 35;
+UPDATE sections SET enrolled_count = 2 WHERE id = 36;
+UPDATE sections SET enrolled_count = 1 WHERE id = 37;
+UPDATE sections SET enrolled_count = 0 WHERE id = 38;
+UPDATE sections SET enrolled_count = 3 WHERE id = 39;
 UPDATE sections SET enrolled_count = 1 WHERE id = 40;
 
 -- 6. Insert Grades for each enrollment (matching allowed numeric scale)
