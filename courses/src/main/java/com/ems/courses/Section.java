@@ -10,7 +10,9 @@ import jakarta.persistence.Table;
 
 public class Section {
     @Id private Long id;
-    @Column(name = "course_code") private String courseCode;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id") private String courseCode;
     @Column(name = "course_title") private String courseTitle;
     private int units;
     @Column(name = "section_code") private String sectionCode;
@@ -28,4 +30,6 @@ public class Section {
     public int getCapacity() { return capacity; }
     public int getEnrolledCount() { return enrolledCount; }
     public String getTerm() { return term; }
+
+    public void setEnrolledCount(int newEnrolledCount) {this.enrolledCount = newEnrolledCount; }
 }

@@ -6,12 +6,16 @@ import com.ems.proto.courses.*;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
+import java.util.stream.Stream;
+
 @Service
 public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase {
-    private final SectionRepository sections;
-    
-    public CoursesGrpcService(SectionRepository sections) {
-        this.sections = sections;
+    private final SectionRepository sectionRepo;
+    private final EnrollmentService enrollmentService;
+
+    public CoursesGrpcService(SectionRepository sectionRepo, EnrollmentService enrollmentService) {
+        this.sectionRepo = sectionRepo;
+        this.enrollmentService = enrollmentService;
     }
     
     private SectionInfo toProto(Section s) {
@@ -32,7 +36,7 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
     @Override
     public void listSection(ListSectionRequest req, StreamObserver<ListSectionResponse> out) {
         try {
-            var rows = req.getTerm().isBlank() ? sections.findAll() : sections.findByTerm(req.getTerm());
+            var rows = req.getTerm().isBlank() ? sectionRepo.findAll() : sectionRepo.findByTerm(req.getTerm());
             var response = ListSectionResponse.newBuilder();
             rows.forEach(s -> response.addSections(toProto(s)));
             out.onNext(response.build());
@@ -41,11 +45,42 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
             out.onError(Status.INTERNAL.withDescription("Could not list sections").asRuntimeException());
         }
     }
-    
-    // @Override 
-    // public void enrollCourse() {
-        
-    // }
+
+    @Override
+    public void enrollCourse(EnrollCourseRequest req, StreamObserver<EnrollCourseResponse> out) {
+        try {
+            if (!"student".equalsIgnoreCase(JwtServerInterceptor.ROLE.get())) {
+                out.onError(Status.PERMISSION_DENIED.withDescription("Only students can enroll").asRuntimeException());
+                return;
+            }
+            Long studentId = JwtServerInterceptor.USER_ID.get();
+
+            if(studentId == null){
+                out.onError(Status.UNAUTHENTICATED.withDescription("User context missing").asRuntimeException());
+
+                return;
+            }
+
+            Enrollment enrollment = enrollmentService.enrollStudent(req.getSectionId(), studentId);
+
+            Section updatedSection = sectionRepo.findById(req.getSectionId()).get();
+
+            var response = EnrollCourseResponse.newBuilder()
+                    .setEnrollmentId(enrollment.getId())
+                    .setSection(toProto(updatedSection))
+                    .build();
+
+            out.onNext(response);
+            out.onCompleted();
+
+        } catch(io.grpc.StatusRuntimeException e){
+            out.onError(e);
+        } catch(Exception e){
+            out.onError(Status.INTERNAL.withDescription("Enrollment failed").asRuntimeException());
+        }
+
+
+    }
     
     // @Override 
     // public void getEnrolledClasses() {
