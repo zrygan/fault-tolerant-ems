@@ -11,11 +11,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpSession;
 import io.grpc.StatusRuntimeException;
 
-import com.ems.proto.auth.*;
 import com.ems.proto.courses.*;
 import com.ems.proto.grades.*;
-
-import com.ems.view.GrpcAuth.*;
 
 @Controller
 @RequestMapping("/student")
