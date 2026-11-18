@@ -13,7 +13,7 @@ service GradesService{
 
 message GetGradesRequest{}
 
-message GetGradesReponse{
+message GetGradesResponse{
     repeated GradeRecord grades = 1;
 }
 
@@ -22,7 +22,7 @@ message UploadGradesRequest{
     double grade = 2;
 }
 
-message UploadGradesReponse{
+message UploadGradesResponse{
     int64 enrollment_id = 1;
     double grade = 2;
 }
