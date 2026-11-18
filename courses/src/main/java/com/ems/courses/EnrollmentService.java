@@ -21,6 +21,11 @@ public class EnrollmentService {
         }
 
         Section section = sectionRepo.findById(sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
+        if (enrollmentRepo.existsByStudentAndCourseCode(studentId, section.getCourseCode())) {
+            throw Status.ALREADY_EXISTS
+                    .withDescription("You are already enrolled in " + section.getCourseCode() + " (another section).")
+                    .asRuntimeException();
+        }
 
         if(section.getEnrolledCount() >= section.getCapacity()){
             throw Status.FAILED_PRECONDITION.withDescription("Section is full").asRuntimeException();
@@ -52,6 +57,7 @@ public class EnrollmentService {
         }
 
         Section section = sectionRepo.findById(sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
+
 
         boolean wasFull = section.getEnrolledCount() >= section.getCapacity();
 

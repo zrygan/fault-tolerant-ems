@@ -13,4 +13,14 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     @Query(value = "SELECT EXISTS (SELECT 1 FROM grades WHERE enrollment_id = :enrollmentId)", nativeQuery = true)
     boolean hasGrade(@Param("enrollmentId") Long enrollmentId);
+
+    @Query("""
+        SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END
+        FROM Enrollment e, Section s
+        WHERE e.sectionId = s.id
+          AND e.studentId = :studentId
+          AND s.course.code = :courseCode
+        """)
+    boolean existsByStudentAndCourseCode(@Param("studentId") Long studentId,
+                                         @Param("courseCode") String courseCode);
 }
