@@ -19,7 +19,7 @@ public class Grade {
     
     protected Grade() {}
     
-     public Grade(Long enrollmentId, BigDecimal grade, Long uploadedBy) {
+    public Grade(Long enrollmentId, BigDecimal grade, Long uploadedBy) {
         this.enrollmentId = enrollmentId;
         update(grade, uploadedBy);
     }
