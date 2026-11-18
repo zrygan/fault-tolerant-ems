@@ -59,6 +59,16 @@ public class StudentController {
         } catch (StatusRuntimeException e) {
             model.addAttribute("error", "Courses are temporarily unavailable.");
         }
+
+        try {
+            var enrolled = grpcAuth.withToken(courses, s)
+                    .listEnrollments(ListEnrollmentRequest.getDefaultInstance()).getSectionsList();
+            model.addAttribute("enrolled", enrolled);
+            model.addAttribute("enrolledIds",
+                    enrolled.stream().map(SectionInfo::getId).collect(java.util.stream.Collectors.toSet()));
+        } catch (StatusRuntimeException e) {
+            model.addAttribute("error", "Enrolled courses are temporarily unavailable.");
+        }
         return "pages/student/enroll";
     }
 
@@ -70,6 +80,19 @@ public class StudentController {
             ra.addFlashAttribute("message", "Enrolled!");
         } catch (StatusRuntimeException e) {
             ra.addFlashAttribute("error", "Could not enroll: " + e.getStatus().getDescription());
+        }
+        return "redirect:/student/enroll";
+    }
+
+
+    @PostMapping("/drop")
+    public String doDrop(@RequestParam long sectionId, HttpSession s, RedirectAttributes ra) {
+        try {
+            grpcAuth.withToken(courses, s).dropCourse(
+                    DropCourseRequest.newBuilder().setSectionId(sectionId).build());
+            ra.addFlashAttribute("message", "Dropped.");
+        } catch (StatusRuntimeException e) {
+            ra.addFlashAttribute("error", "Could not drop: " + e.getStatus().getDescription());
         }
         return "redirect:/student/enroll";
     }

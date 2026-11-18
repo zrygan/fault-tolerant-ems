@@ -193,3 +193,29 @@ button:hover {
 .main-section {
     padding: 1em 2em;
 }
+
+.enroll-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+.enroll-available {
+    flex: 1;
+    min-width: 0;
+}
+
+.enroll-sidebar {
+    width: 320px;
+}
+
+.enroll-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.enroll-sidebar li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}

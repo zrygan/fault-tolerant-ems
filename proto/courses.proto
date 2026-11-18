@@ -9,6 +9,7 @@ service CourseService{
     rpc ListSection (ListSectionRequest) returns (ListSectionResponse);
     rpc EnrollCourse (EnrollCourseRequest) returns (EnrollCourseResponse);
     rpc ListEnrollments (ListEnrollmentRequest) returns (ListEnrollmentResponse);
+    rpc DropCourse (DropCourseRequest) returns (DropCourseResponse);
 }
 
 message ListSectionRequest{
@@ -46,4 +47,12 @@ message SectionInfo{
     int32 enrolled_count = 8;
     bool is_open = 9;
     string term = 10;
+}
+
+message DropCourseRequest {
+    int64 section_id = 1;
+}
+
+message DropCourseResponse {
+    SectionInfo section = 1;
 }

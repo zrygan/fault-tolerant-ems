@@ -14,29 +14,63 @@
         <main class="main-section" id="enroll-main">
             <h3>Enroll in available courses</h3>
             <p th:if="${error}" th:text="${error}"></p>
-            <table>
-                <thead>
-                <tr>
-                    <th>Course</th>
-                    <th>Section</th>
-                    <th>Capacity</th>
-                    <th>Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="s : ${sections}">
-                <td th:text="${s.courseCode}"></td>
-                    <td style="padding: 10px;" th:text="${s.id}"></td>
-                <td style="text-align: center;" th:text="${s.enrolledCount} + '/' + ${s.capacity}"></td>
-                <td>
-                <form th:action="@{/student/enroll}" method="post" th:if="${s.isOpen}">
-                    <input type="hidden" name="sectionId" th:value="${s.id}">
-                    <button style = " padding: 6px 10px;">Enroll</button>
-                </form>
-                </td>
-                </tr>
-                </tbody>
-            </table>
+            <p th:if="${message}" th:text="${message}"></p>
+
+            <div class="enroll-layout">
+                <section class="enroll-available">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Capacity</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${sections}">
+                        <td th:text="${s.courseCode}"></td>
+                            <td style="padding: 10px;" th:text="${s.sectionCode}"></td>
+                        <td style="text-align: center;" th:text="${s.enrolledCount} + '/' + ${s.capacity}"></td>
+                        <td>
+                        <form th:action="@{/student/enroll}" method="post" th:if="${s.isOpen}">
+                            <input type="hidden" name="sectionId" th:value="${s.id}">
+                            <button style = " padding: 6px 10px;">Enroll</button>
+                        </form>
+                        </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </section>
+                <aside class="enroll-sidebar">
+                    <h3>Enrolled courses</h3>
+                    <p th:if="${#lists.isEmpty(enrolled)}">You are not enrolled in any courses yet.</p>
+                    <table th:unless="${#lists.isEmpty(enrolled)}">
+                        <thead>
+                        <tr>
+                            <th>Course</th>
+                            <th>Section</th>
+                            <th>Units</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="e : ${enrolled}">
+                            <td th:text="${e.courseCode}"></td>
+                            <td style="padding: 10px;" th:text="${e.sectionCode}"></td>
+                            <td style="padding-right: 15px;" th:text="${e.units} + ' units'"></td>
+                            <td>
+                                <form th:action="@{/student/drop}" method="post"
+                                      onsubmit="return confirm('Drop this course?')">
+                                    <input type="hidden" name="sectionId" th:value="${e.id}">
+                                    <button style="padding: 10px 10px;">Drop</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </aside>
+            </div>
         </main>
         <script type="module" th:src="@{/main.js}"></script>
     </body>

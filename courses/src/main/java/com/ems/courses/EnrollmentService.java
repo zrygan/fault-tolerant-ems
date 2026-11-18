@@ -42,6 +42,26 @@ public class EnrollmentService {
         return enrollmentRepo.save(enrollment);
     }
 
+    @Transactional
+    public Section dropStudent(Long sectionId, Long studentId){
+        Enrollment enrollment = enrollmentRepo.findByStudentIdAndSectionId(studentId, sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("You are not enrolled in this section.").asRuntimeException());
+        if (enrollmentRepo.hasGrade(enrollment.getId())) {
+            throw Status.FAILED_PRECONDITION
+                    .withDescription("This course already has a grade and can no longer be dropped.")
+                    .asRuntimeException();
+        }
+
+        Section section = sectionRepo.findById(sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
+
+        boolean wasFull = section.getEnrolledCount() >= section.getCapacity();
+
+        enrollmentRepo.delete(enrollment);
+        section.setEnrolledCount(Math.max(0, section.getEnrolledCount() - 1));
+        if (wasFull) section.setIsOpen(true);   // only undo the auto-close from enrollStudent
+
+        return sectionRepo.save(section);
+    }
+
     public java.util.List<Enrollment> getEnrollmentsForStudent(Long studentId) {
         return enrollmentRepo.findByStudentId(studentId);
     }

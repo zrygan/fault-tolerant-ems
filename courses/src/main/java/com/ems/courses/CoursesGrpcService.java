@@ -108,8 +108,27 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
         }
     }
 
-    // @Override
-    // public void getEnrolledClasses() {
-        
-    // }
+    @Override
+    public void dropCourse(DropCourseRequest req, StreamObserver<DropCourseResponse> out) {
+        try {
+            if (!"student".equalsIgnoreCase(JwtServerInterceptor.ROLE.get())) {
+                out.onError(Status.PERMISSION_DENIED.withDescription("Only students can drop").asRuntimeException());
+                return;
+            }
+            Long studentId = JwtServerInterceptor.USER_ID.get();
+            if (studentId == null) {
+                out.onError(Status.UNAUTHENTICATED.withDescription("User context missing").asRuntimeException());
+                return;
+            }
+
+            Section section = enrollmentService.dropStudent(req.getSectionId(), studentId);
+
+            out.onNext(DropCourseResponse.newBuilder().setSection(toProto(section)).build());
+            out.onCompleted();
+        } catch (io.grpc.StatusRuntimeException e) {
+            out.onError(e);
+        } catch (Exception e) {
+            out.onError(Status.INTERNAL.withDescription("Drop failed").asRuntimeException());
+        }
+    }
 }
