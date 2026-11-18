@@ -6,8 +6,8 @@ option java_multiple_files = true;
 option java_package = "com.ems.proto.grades";
 
 service GradesService{
-    rpc GetGrades (GetGradesRequest) returns (GetGradesReponse);
-    rpc UploadGrades (UploadGradesRequest) returns (UploadGradesReponse);
+    rpc GetGrades (GetGradesRequest) returns (GetGradesResponse);
+    rpc UploadGrades (UploadGradesRequest) returns (UploadGradesResponse);
     rpc ListGradableStudents (ListGradableStudentsRequest) returns (ListGradableStudentsResponse);
 }
 

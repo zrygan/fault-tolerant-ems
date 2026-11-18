@@ -14,11 +14,24 @@
         <main class="main-section" id="grades-main">
             <h3>View your grades</h3>
             <p th:if="${error}" th:text="${error}"></p>
-            <tr th:each="g : ${grades}">
-                <td th:text="${g.courseCode}"></td>
-                <td th:text="${g.courseTitle}"></td>
-                <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
-            </tr>
+            <div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Course Name</th>
+                            <th>Grade</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="grade-view" th:each="g : ${grades}">
+                            <td th:text="${g.courseCode}"></td>
+                            <td th:text="${g.courseTitle}"></td>
+                            <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </main>
         <script type="module" th:src="@{/main.js}"></script>
     </body>
