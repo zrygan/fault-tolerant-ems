@@ -1,0 +1,27 @@
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Faculty Dashboard</title>
+
+        <link rel="stylesheet" th:href="@{/style.css}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <header th:replace="~{pages/components/facultyHeader :: header}"></header>
+
+        <div id="header-placeholder"></div>
+        <main class="main-section" id="dashboard-main">
+            <h2 th:text="'Welcome, ' + ${user?.fullName} + '!'">Welcome, Name!</h2>
+
+            <div>
+                <h3>Section Overview</h3>
+                <div>
+
+                </div>
+            </div>
+        </main>
+        <script type="module" th:src="@{/main.js}"></script>
+    </body>
+</html>

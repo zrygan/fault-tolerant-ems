@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Section View</title>
+
+        <link rel="stylesheet" th:href="@{/style.css}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <header th:replace="~{pages/components/facultyHeader :: header}"></header>
+        <main class="main-section" id="grades-main">
+            <h3>Sections</h3>
+            <p th:if="${error}" th:text="${error}"></p>
+            <tr th:each="g : ${grades}">
+                <td th:text="${g.courseCode}"></td>
+                <td th:text="${g.courseTitle}"></td>
+                <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
+            </tr>
+        </main>
+        <script type="module" th:src="@{/main.js}"></script>
+    </body>
+</html>
