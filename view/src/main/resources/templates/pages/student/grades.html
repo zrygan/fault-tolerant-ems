@@ -1,9 +1,9 @@
-<html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8" />
         <title>Grade View</title>
 
-        <!-- <link rel="stylesheet" href="../../static/style.css" /> -->
         <link rel="stylesheet" th:href="@{/style.css}" />
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +14,10 @@
         <main class="main-section" id="grades-main">
             <h3>View your grades</h3>
             <p th:if="${error}" th:text="${error}"></p>
-            <div>
+            <div class="table-res">
                 <table>
                     <thead>
-                        <tr>
+                        <tr class="grades-table-head">
                             <th>Course Code</th>
                             <th>Course Name</th>
                             <th>Grade</th>
@@ -27,7 +27,7 @@
                         <tr class="grade-view" th:each="g : ${grades}">
                             <td th:text="${g.courseCode}"></td>
                             <td th:text="${g.courseTitle}"></td>
-                            <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
+                            <td th:text="${g.hasGrade()} ? ${g.grade} : 'No grade yet'"></td>
                         </tr>
                     </tbody>
                 </table>

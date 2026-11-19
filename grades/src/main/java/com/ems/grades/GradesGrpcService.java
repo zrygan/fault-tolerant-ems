@@ -93,8 +93,29 @@ public class GradesGrpcService extends GradesServiceGrpc.GradesServiceImplBase {
         }
     }
     
-    // @Override 
-    // public void listGradableStudents() {
-        
-    // }
+    @Override 
+    public void listGradableStudents(ListGradableStudentsRequest req, StreamObserver<ListGradableStudentsResponse> out) {
+        Long callerId = JwtServerInterceptor.USER_ID.get();
+        if (callerId == null || !isFaculty()) {
+            out.onError(Status.PERMISSION_DENIED
+                    .withDescription("Only faculty can list students").asRuntimeException());
+            return;
+        }
+        try {
+            var response = ListGradableStudentsResponse.newBuilder();
+            grades.findGradableStudents(req.getSectionId(), callerId).forEach(r -> {
+                var s = GradableStudent.newBuilder()
+                        .setEnrollmentId(r.getEnrollmentId())
+                        .setStudentName(r.getStudentName());
+                if (r.getCurrentGrade() != null) {
+                    s.setCurrentGrade(r.getCurrentGrade().doubleValue());
+                }
+                response.addStudents(s.build());
+            });
+            out.onNext(response.build());
+            out.onCompleted();
+        } catch (Exception e) {
+            out.onError(Status.INTERNAL.withDescription("Could not list students").asRuntimeException());
+        }
+    }
 }

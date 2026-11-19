@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8" />
         <title>Section View</title>
@@ -12,12 +13,59 @@
         <header th:replace="~{pages/components/facultyHeader :: header}"></header>
         <main class="main-section" id="grades-main">
             <h3>Sections</h3>
+
             <p th:if="${error}" th:text="${error}"></p>
-            <tr th:each="g : ${grades}">
-                <td th:text="${g.courseCode}"></td>
-                <td th:text="${g.courseTitle}"></td>
-                <td th:text="${g.hasGrade()} ? ${g.grade} : '—'"></td>
-            </tr>
+            <p th:if="${message}" th:text="${message}"></p>
+
+            <form th:action="@{/faculty/grades}" method="get">
+                <label for="sectionId">Section:</label>
+                <select id="sectionId" name="sectionId" onchange="this.form.submit()">
+                    <option value="" th:selected="${selectedSectionId == null}">Select a section</option>
+                    <option th:each="sec : ${sections}"
+                            th:value="${sec.id}"
+                            th:selected="${selectedSectionId != null and sec.id == selectedSectionId}"
+                            th:text="${sec.courseCode + ' ' + sec.sectionCode + ' (' + sec.term + ')'}">
+                    </option>
+                </select>
+                <noscript><button type="submit">View</button></noscript>
+            </form>
+
+            <p th:if="${sections != null and #lists.isEmpty(sections)}">
+                You have no sections assigned.
+            </p>
+
+            <table th:if="${students != null and !#lists.isEmpty(students)}">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Grade</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="st : ${students}">
+                        <td th:text="${st.studentName}"></td>
+                        <form th:action="@{/faculty/grades}" method="post">
+                            <input type="hidden" name="sectionId" th:value="${selectedSectionId}">
+                            <input type="hidden" name="enrollmentId" th:value="${st.enrollmentId}">
+                            <td>
+                                <select name="grade" required>
+                                    <option value="" disabled th:selected="${!st.hasCurrentGrade()}">—</option>
+                                    <option th:each="v : ${gradeOptions}"
+                                            th:value="${v}"
+                                            th:selected="${st.hasCurrentGrade() and st.currentGrade == v}"
+                                            th:text="${#numbers.formatDecimal(v, 1, 1)}"></option>
+                                </select>
+                            </td>
+                            <td><button type="submit">Save</button></td>
+                        </form>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p th:if="${students != null and #lists.isEmpty(students)}">
+                No enrolled students in this section.
+            </p>
         </main>
         <script type="module" th:src="@{/main.js}"></script>
     </body>

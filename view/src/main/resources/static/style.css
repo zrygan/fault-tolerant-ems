@@ -194,6 +194,51 @@ button:hover {
     padding: 1em 2em;
 }
 
+.table-res {
+    height: 31em;
+    max-height: 70vh;
+    overflow: auto;
+    background: var(--main-gray);
+    border: 1px solid var(--darker-gray);
+    border-radius: 6px;
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    table-layout: fixed;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--main-gray);
+    color: var(--text);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8em;
+    padding: 1em;
+    border-bottom: 1px solid var(--darker-gray);
+}
+
+td {
+    padding: 12px 16px;
+    overflow-wrap: anywhere;
+}
+
+.grades-table-head {
+    font-size: 1.2em;
+}
+
+.grade-view {
+    font-size: 1em;
+}
+
+tbody tr.alt td {
+    background:var(--darker-gray);
+}
+
 .enroll-layout {
     display: flex;
     gap: 24px;
