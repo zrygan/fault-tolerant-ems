@@ -7,6 +7,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.stream.Stream;
+import java.util.List;
 
 @Service
 public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase {
@@ -18,11 +19,11 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
         this.enrollmentService = enrollmentService;
     }
     
-    private SectionInfo toProto(Section s) {
+    private SectionInfo toProto(SectionRepository.SectionRow s) {
         return SectionInfo.newBuilder()
                 .setId(s.getId())
                 .setCourseCode(s.getCourseCode())
-                .setCourseTitle(s.getCourseName())
+                .setCourseTitle(s.getCourseTitle())
                 .setUnits(s.getUnits())
                 .setSectionCode(s.getSectionCode())
                 .setFacultyName(s.getFacultyName())
@@ -36,9 +37,19 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
     @Override
     public void listSection(ListSectionRequest req, StreamObserver<ListSectionResponse> out) {
         try {
-            var rows = req.getTerm().isBlank() ? sectionRepo.findAll(SectionRepository.SECTION_ORDER) : sectionRepo.findByTerm(req.getTerm(), SectionRepository.SECTION_ORDER);
+            List<SectionRepository.SectionRow> rows;
+            if (req.getMineOnly()) {
+                Long callerId = JwtServerInterceptor.USER_ID.get();
+                if (callerId == null) {
+                    out.onError(Status.UNAUTHENTICATED.asRuntimeException());
+                    return;
+                }
+                rows = sectionRepo.findByFaculty(callerId, req.getTerm());
+            } else {
+                rows = sectionRepo.findSections(req.getTerm());
+            }
             var response = ListSectionResponse.newBuilder();
-            rows.forEach(s -> response.addSections(toProto(s)));
+            rows.forEach(r -> response.addSections(toProto(r)));
             out.onNext(response.build());
             out.onCompleted();
         } catch (Exception e) {
@@ -62,16 +73,13 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
             }
 
             Enrollment enrollment = enrollmentService.enrollStudent(req.getSectionId(), studentId);
+            var updatedSection = sectionRepo.findRowById(req.getSectionId()).orElseThrow();
 
-            Section updatedSection = sectionRepo.findById(req.getSectionId()).get();
-
-            var response = EnrollCourseResponse.newBuilder()
-                    .setEnrollmentId(enrollment.getId())
-                    .setSection(toProto(updatedSection))
-                    .build();
-
-            out.onNext(response);
-            out.onCompleted();
+           out.onNext(EnrollCourseResponse.newBuilder()
+                .setEnrollmentId(enrollment.getId())
+                .setSection(toProto(updatedSection))
+                .build());
+        out.onCompleted();
 
         } catch(io.grpc.StatusRuntimeException e){
             out.onError(e);
@@ -91,14 +99,11 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
                 return;
             }
 
-            var enrollments = enrollmentService.getEnrollmentsForStudent(studentId);
             var response = ListEnrollmentResponse.newBuilder();
 
-            for (Enrollment e : enrollments) {
-                sectionRepo.findById(e.getSectionId()).ifPresent(s ->
-                        response.addSections(toProto(s))
-                );
-            }
+            sectionRepo.findByStudent(studentId).forEach(r -> response.addSections(toProto(r)));
+            out.onNext(response.build());
+            out.onCompleted();
 
             out.onNext(response.build());
             out.onCompleted();
@@ -121,7 +126,8 @@ public class CoursesGrpcService extends CourseServiceGrpc.CourseServiceImplBase 
                 return;
             }
 
-            Section section = enrollmentService.dropStudent(req.getSectionId(), studentId);
+            enrollmentService.dropStudent(req.getSectionId(), studentId);
+            var section = sectionRepo.findRowById(req.getSectionId()).orElseThrow();
 
             out.onNext(DropCourseResponse.newBuilder().setSection(toProto(section)).build());
             out.onCompleted();
