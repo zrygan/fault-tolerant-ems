@@ -4,15 +4,25 @@ services:
     build:
       context: .
       dockerfile: view/Dockerfile
+    secrets:
+      - tls_keystore
     environment:
       AUTH_ADDRESS: "172.28.0.11:9090"
       GRADES_ADDRESS: "172.28.0.12:9090"
       COURSES_ADDRESS: "172.28.0.13:9090"
+      SERVER_PORT: "8443"
+      SERVER_SSL_BUNDLE: web
+      SPRING_SSL_BUNDLE_JKS_WEB_KEYSTORE_LOCATION: file:/run/secrets/tls_keystore
+      SPRING_SSL_BUNDLE_JKS_WEB_KEYSTORE_TYPE: PKCS12
+      SPRING_SSL_BUNDLE_JKS_WEB_KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD}
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      SERVER_SERVLET_SESSION_COOKIE_HTTP_ONLY: "true"
+      SERVER_SERVLET_SESSION_COOKIE_SAME_SITE: lax
     networks:
       frontend:
         ipv4_address: 172.28.0.10
     ports:
-      - "3000:8080"
+      - "3443:8443"
 
   auth:
     build:
@@ -173,6 +183,8 @@ secrets:
     environment: REPL_PASSWORD
   jwt_secret:
     environment: JWT_SECRET
+  tls_keystore:
+    file: ./certs/keystore.p12
 
 networks:
   frontend:

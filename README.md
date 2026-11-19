@@ -27,4 +27,4 @@ docker compose up -d
 docker compose ps
 ```
 
-Once docker is running, go to `http://localhost:3000/` to access the view
+Once docker is running, go to `https://localhost:3443` to access the view
