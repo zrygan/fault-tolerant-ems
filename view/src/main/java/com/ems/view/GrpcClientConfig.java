@@ -1,6 +1,7 @@
 package com.ems.view;
 
 import com.ems.proto.auth.AuthServiceGrpc;
+import com.ems.proto.clearance.ClearanceServiceGrpc;
 import com.ems.proto.courses.CourseServiceGrpc;
 import com.ems.proto.grades.GradesServiceGrpc;
 
@@ -30,5 +31,11 @@ public class GrpcClientConfig {
             GrpcChannelFactory channels,
             @Value("${GRADES_ADDRESS:localhost:9093}") String address) {
         return GradesServiceGrpc.newBlockingStub(channels.createChannel(address));
-}
+
+    @Bean
+    ClearanceServiceGrpc.ClearanceServiceBlockingStub clearanceStub(
+            GrpcChannelFactory channels,
+            @Value("${GRADES_ADDRESS:localhost:9094}") String address) {
+        return ClearanceServiceGrpc.newBlockingStub(channels.createChannel(address));
+    }
 }
