@@ -9,25 +9,45 @@ public class EnrollmentService {
     private final SectionRepository sectionRepo;
     private final EnrollmentRepository enrollmentRepo;
 
-    public EnrollmentService(SectionRepository sectionRepo, EnrollmentRepository enrollmentRepo){
+    public EnrollmentService(SectionRepository sectionRepo, EnrollmentRepository enrollmentRepo) {
         this.sectionRepo = sectionRepo;
         this.enrollmentRepo = enrollmentRepo;
     }
 
     @Transactional
-    public Enrollment enrollStudent(Long sectionId, Long studentId){
-        if(enrollmentRepo.existsByStudentIdAndSectionId(studentId, sectionId)){
-            throw Status.ALREADY_EXISTS.withDescription("You are already enrolled in this section.").asRuntimeException();
+    public Enrollment enrollStudent(Long sectionId, Long studentId) {
+        if (enrollmentRepo.existsByStudentIdAndSectionId(studentId, sectionId)) {
+            throw Status.ALREADY_EXISTS.withDescription("You are already enrolled in this section.")
+                    .asRuntimeException();
         }
 
-        Section section = sectionRepo.findById(sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
+        Section section = sectionRepo.findById(sectionId)
+                .orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
         if (enrollmentRepo.existsByStudentAndCourseCode(studentId, section.getCourseCode())) {
             throw Status.ALREADY_EXISTS
                     .withDescription("You are already enrolled in " + section.getCourseCode() + " (another section).")
                     .asRuntimeException();
         }
 
-        if(section.getEnrolledCount() >= section.getCapacity()){
+        // ===
+        // BONUS: CLEARANCE HOLDING
+        // ===
+        // Checks for active holds, the error message goes in
+        // withDescription/
+        // 
+        // Refer to findActiveHolds@courses/EnrollmentRepository
+        //  and clearance/
+        var holds = enrollmentRepo.findActiveHolds(studentId);
+        if (!holds.isEmpty()) {
+            var hold = holds.get(0);
+            throw Status.FAILED_PRECONDITION
+                    .withDescription("Failed to enroll " + section.getCourseName() + ", " + section.getSectionCode()
+                            + ".\nPlease settle clearance hold: " + hold.getHoldType() + " with " + hold.getAdminName()
+                            + ".")
+                    .asRuntimeException();
+        }
+
+        if (section.getEnrolledCount() >= section.getCapacity()) {
             throw Status.FAILED_PRECONDITION.withDescription("Section is full").asRuntimeException();
         }
 
@@ -39,7 +59,7 @@ public class EnrollmentService {
         int newCount = section.getEnrolledCount() + 1;
         section.setEnrolledCount(newCount);
 
-        if(newCount>= section.getCapacity()){
+        if (newCount >= section.getCapacity()) {
             section.setIsOpen(false);
         }
 
@@ -48,22 +68,24 @@ public class EnrollmentService {
     }
 
     @Transactional
-    public Section dropStudent(Long sectionId, Long studentId){
-        Enrollment enrollment = enrollmentRepo.findByStudentIdAndSectionId(studentId, sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("You are not enrolled in this section.").asRuntimeException());
+    public Section dropStudent(Long sectionId, Long studentId) {
+        Enrollment enrollment = enrollmentRepo.findByStudentIdAndSectionId(studentId, sectionId).orElseThrow(
+                () -> Status.NOT_FOUND.withDescription("You are not enrolled in this section.").asRuntimeException());
         if (enrollmentRepo.hasGrade(enrollment.getId())) {
             throw Status.FAILED_PRECONDITION
                     .withDescription("This course already has a grade and can no longer be dropped.")
                     .asRuntimeException();
         }
 
-        Section section = sectionRepo.findById(sectionId).orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
-
+        Section section = sectionRepo.findById(sectionId)
+                .orElseThrow(() -> Status.NOT_FOUND.withDescription("Section not found").asRuntimeException());
 
         boolean wasFull = section.getEnrolledCount() >= section.getCapacity();
 
         enrollmentRepo.delete(enrollment);
         section.setEnrolledCount(Math.max(0, section.getEnrolledCount() - 1));
-        if (wasFull) section.setIsOpen(true);   // only undo the auto-close from enrollStudent
+        if (wasFull)
+            section.setIsOpen(true); // only undo the auto-close from enrollStudent
 
         return sectionRepo.save(section);
     }
