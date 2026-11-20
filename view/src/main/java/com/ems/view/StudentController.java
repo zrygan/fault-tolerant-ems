@@ -22,18 +22,20 @@ public class StudentController {
     private final GrpcAuth grpcAuth;
 
     public StudentController(CourseServiceGrpc.CourseServiceBlockingStub courses,
-                             GradesServiceGrpc.GradesServiceBlockingStub grades,
-                             GrpcAuth grpcAuth) {
-        this.courses = courses; this.grades = grades; this.grpcAuth = grpcAuth;
+            GradesServiceGrpc.GradesServiceBlockingStub grades,
+            GrpcAuth grpcAuth) {
+        this.courses = courses;
+        this.grades = grades;
+        this.grpcAuth = grpcAuth;
     }
 
     @GetMapping("/dashboard")
     public String dashboard(Model model, HttpSession s) {
         try {
             model.addAttribute("grades", grpcAuth.withToken(grades, s)
-                .getGrades(GetGradesRequest.getDefaultInstance()).getGradesList());
+                    .getGrades(GetGradesRequest.getDefaultInstance()).getGradesList());
             model.addAttribute("schedule", grpcAuth.withToken(courses, s)
-                .listEnrollments(ListEnrollmentRequest.getDefaultInstance()).getSectionsList());
+                    .listEnrollments(ListEnrollmentRequest.getDefaultInstance()).getSectionsList());
         } catch (StatusRuntimeException e) {
             model.addAttribute("error", "Some data is temporarily unavailable.");
         }
@@ -44,7 +46,7 @@ public class StudentController {
     public String gradesPage(Model model, HttpSession s) {
         try {
             model.addAttribute("grades", grpcAuth.withToken(grades, s)
-                .getGrades(GetGradesRequest.getDefaultInstance()).getGradesList());
+                    .getGrades(GetGradesRequest.getDefaultInstance()).getGradesList());
         } catch (StatusRuntimeException e) {
             model.addAttribute("error", "Grades are temporarily unavailable.");
         }
@@ -72,18 +74,35 @@ public class StudentController {
         return "pages/student/enroll";
     }
 
+    @GetMapping("/clearances")
+    public String clearancesPage(Model model, HttpSession s) {
+        try {
+            var user = (com.ems.proto.auth.UserInfo) s.getAttribute("user");
+            var req = com.ems.proto.clearance.ListStudentClearancesRequest.newBuilder()
+                    .setStudentId(user.getId())
+                    .setUnresolvedOnly(false)
+                    .build();
+            model.addAttribute("clearances",
+                    grpcAuth.withToken(clearance, s).listStudentClearances(req).getClearancesList());
+        } catch (StatusRuntimeException e) {
+            model.addAttribute("error", "Clearances are temporarily unavailable.");
+        }
+        return "pages/student/clearances";
+    }
+
     @PostMapping("/enroll")
     public String doEnroll(@RequestParam long sectionId, HttpSession s, RedirectAttributes ra) {
         try {
             grpcAuth.withToken(courses, s).enrollCourse(
-                EnrollCourseRequest.newBuilder().setSectionId(sectionId).build());
+                    EnrollCourseRequest.newBuilder().setSectionId(sectionId).build());
             ra.addFlashAttribute("message", "Enrolled!");
         } catch (StatusRuntimeException e) {
-            ra.addFlashAttribute("error", "Could not enroll: " + e.getStatus().getDescription());
+            String desc = e.getStatus().getDescription();
+            ra.addFlashAttribute("error",
+                    desc != null && desc.startsWith("Failed to enroll") ? desc : "Could not enroll: " + desc);
         }
         return "redirect:/student/enroll";
     }
-
 
     @PostMapping("/drop")
     public String doDrop(@RequestParam long sectionId, HttpSession s, RedirectAttributes ra) {
