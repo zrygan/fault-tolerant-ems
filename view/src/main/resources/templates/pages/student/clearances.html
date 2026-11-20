@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Clearances</title>
+
+        <link rel="stylesheet" th:href="@{/style.css}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    </head>
+    <body>
+        <header th:replace="~{pages/components/studentHeader :: header}"></header>
+        <main class="main-section" id="grades-main">
+            <h3>View your clearance holds</h3>
+            <p th:if="${error}" th:text="${error}"></p>
+            <p th:if="${clearances != null and #lists.isEmpty(clearances)}">You have no clearance holds.</p>
+            <div class="table-res" th:if="${clearances != null and !#lists.isEmpty(clearances)}">
+                <table>
+                    <thead>
+                        <tr class="grades-table-head">
+                            <th>Hold Type</th>
+                            <th>Placed By (Admin ID)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="grade-view" th:each="c : ${clearances}">
+                            <td th:text="${c.holdType}"></td>
+                            <td th:text="${c.adminId}"></td>
+                            <td th:text="${c.hasResolvedBy()} ? 'Resolved' : 'Active'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        <script type="module" th:src="@{/main.js}"></script>
+    </body>
+</html>

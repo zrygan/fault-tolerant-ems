@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Admin Clearances</title>
+
+        <link rel="stylesheet" th:href="@{/style.css}" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+        <style>
+            .student-combo {
+                position: relative;
+                display: inline-block;
+                min-width: 240px;
+            }
+            .student-combo input[type="text"] {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .student-combo-list {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                max-height: 200px;
+                overflow-y: auto;
+                background: #fff;
+                color: #111;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                z-index: 100;
+                margin: 2px 0 0;
+                padding: 0;
+                list-style: none;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            }
+            .student-combo-list li {
+                padding: 6px 10px;
+                cursor: pointer;
+            }
+            .student-combo-list li:hover {
+                background: #f0f4ff;
+            }
+        </style>
+    </head>
+    <body>
+        <header th:replace="~{pages/components/adminHeader :: header}"></header>
+
+        <main class="main-section" id="grades-main">
+            <h2 th:text="'Welcome, ' + ${user?.fullName} + '!'">Welcome, Admin!</h2>
+            <p th:if="${error}" th:text="${error}"></p>
+            <p th:if="${message}" th:text="${message}"></p>
+
+            <h3>Place a Clearance Hold</h3>
+            <form th:action="@{/admin/place}" method="post" style="margin-bottom: 24px;">
+                <label for="placeStudentSearch">Student:</label>
+                <div class="student-combo" data-combo>
+                    <input id="placeStudentSearch" type="text" autocomplete="off"
+                           placeholder="Type ID or name..." required data-combo-input />
+                    <input type="hidden" name="studentId" data-combo-hidden />
+                    <ul class="student-combo-list" hidden data-combo-list>
+                        <li th:each="st : ${students}"
+                            th:attr="data-id=${st.id},data-label=${st.id + ', ' + st.fullName}"
+                            th:text="${st.id + ', ' + st.fullName}"></li>
+                    </ul>
+                </div>
+
+                <label for="placeHoldType">Hold Type:</label>
+                <select id="placeHoldType" name="holdType" required>
+                    <option th:each="ht : ${holdTypes}" th:value="${ht}" th:text="${ht}"></option>
+                </select>
+
+                <button type="submit">Place Hold</button>
+            </form>
+
+            <h3>Filter Holds</h3>
+            <form th:action="@{/admin/dashboard}" method="get" style="margin-bottom: 16px;">
+                <label for="filterHoldType">By Hold Type:</label>
+                <select id="filterHoldType" name="holdType">
+                    <option value="">My Issued Active Holds</option>
+                    <option th:each="ht : ${holdTypes}"
+                            th:value="${ht}"
+                            th:selected="${selectedHoldType == ht}"
+                            th:text="${ht}"></option>
+                </select>
+
+                <label for="filterStudentSearch">Or Student:</label>
+                <div class="student-combo" data-combo>
+                    <input id="filterStudentSearch" type="text" autocomplete="off"
+                           placeholder="Type ID or name (optional)" data-combo-input />
+                    <input type="hidden" name="studentId" th:value="${selectedStudentId}" data-combo-hidden />
+                    <ul class="student-combo-list" hidden data-combo-list>
+                        <li th:each="st : ${students}"
+                            th:attr="data-id=${st.id},data-label=${st.id + ', ' + st.fullName}"
+                            th:text="${st.id + ', ' + st.fullName}"></li>
+                    </ul>
+                </div>
+
+                <button type="submit">Filter</button>
+                <a th:href="@{/admin/dashboard}">Reset</a>
+            </form>
+
+            <p th:if="${clearances != null and #lists.isEmpty(clearances)}">No clearance holds found.</p>
+
+            <table th:if="${clearances != null and !#lists.isEmpty(clearances)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Student ID</th>
+                        <th>Hold Type</th>
+                        <th>Admin ID</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${clearances}">
+                        <td th:text="${c.id}"></td>
+                        <td th:text="${c.studentId}"></td>
+                        <td th:text="${c.holdType}"></td>
+                        <td th:text="${c.adminId}"></td>
+                        <td th:text="${c.hasResolvedBy()} ? 'Resolved' : 'Active'"></td>
+                        <td>
+                            <form th:action="@{/admin/resolve}" method="post"
+                                  th:if="${!c.hasResolvedBy() and user != null and c.adminId == user.id}">
+                                <input type="hidden" name="clearanceId" th:value="${c.id}" />
+                                <button type="submit">Resolve</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+        <script type="module" th:src="@{/main.js}"></script>
+        <script>
+            document.querySelectorAll('[data-combo]').forEach(combo => {
+                const input = combo.querySelector('[data-combo-input]');
+                const hidden = combo.querySelector('[data-combo-hidden]');
+                const list = combo.querySelector('[data-combo-list]');
+                const items = Array.from(list.querySelectorAll('li'));
+
+                // Pre-fill label if hidden already has a selected studentId
+                if (hidden.value) {
+                    const match = items.find(li => li.dataset.id === hidden.value);
+                    if (match) input.value = match.dataset.label;
+                }
+
+                const filterItems = () => {
+                    const q = input.value.trim().toLowerCase();
+                    let visibleCount = 0;
+                    let firstVisible = null;
+                    items.forEach(li => {
+                        const show = !q || li.dataset.label.toLowerCase().includes(q);
+                        li.hidden = !show;
+                        if (show) {
+                            visibleCount++;
+                            if (!firstVisible) firstVisible = li;
+                        }
+                    });
+                    list.hidden = visibleCount === 0;
+
+                    // Sync hidden studentId if user typed an exact ID or unique match
+                    const exact = items.find(li =>
+                        li.dataset.id === q || li.dataset.label.toLowerCase() === q
+                    );
+                    if (exact) {
+                        hidden.value = exact.dataset.id;
+                    } else if (!q) {
+                        hidden.value = '';
+                    } else if (visibleCount === 1 && firstVisible) {
+                        hidden.value = firstVisible.dataset.id;
+                    } else {
+                        const leadingId = q.split(',')[0].trim();
+                        hidden.value = /^\d+$/.test(leadingId) ? leadingId : '';
+                    }
+                };
+
+                input.addEventListener('focus', () => {
+                    filterItems();
+                    list.hidden = false;
+                });
+
+                input.addEventListener('input', filterItems);
+
+                items.forEach(li => {
+                    li.addEventListener('mousedown', e => {
+                        e.preventDefault();
+                        input.value = li.dataset.label;
+                        hidden.value = li.dataset.id;
+                        list.hidden = true;
+                    });
+                });
+
+                document.addEventListener('click', e => {
+                    if (!combo.contains(e.target)) list.hidden = true;
+                });
+            });
+        </script>
+    </body>
+</html>
