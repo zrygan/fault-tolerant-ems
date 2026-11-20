@@ -10,4 +10,4 @@ public class ClearanceApplication {
 		SpringApplication.run(ClearanceApplication.class, args);
 	}
 
-}
+}	
