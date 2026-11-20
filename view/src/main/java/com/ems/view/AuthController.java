@@ -23,20 +23,30 @@ public class AuthController {
         this.auth = auth;
         this.grpcAuth = grpcAuth;
     }
-    
-    @GetMapping({"/login"})
-    public String loginPage() { return "pages/login"; }
+
+    @GetMapping({ "/login" })
+    public String loginPage() {
+        return "pages/login";
+    }
 
     @PostMapping("/login")
     public String login(@RequestParam String email, @RequestParam String password,
-                        HttpSession session, RedirectAttributes ra) {
+            HttpSession session, RedirectAttributes ra) {
         try {
             var res = auth.login(LoginRequest.newBuilder()
                     .setEmail(email).setPassword(password).build());
             session.setAttribute("token", res.getToken());
             session.setAttribute("user", res.getUser());
-            return res.getUser().getRole() == Role.ROLE_FACULTY
-                    ? "redirect:/faculty/dashboard" : "redirect:/student/dashboard";
+            switch (res.getUser().getRole()) {
+                case ROLE_ADMIN:
+                    return "redirect:/admin/dashboard";
+                case ROLE_FACULTY:
+                    return "redirect:/faculty/dashboard";
+                case ROLE_STUDENT:
+                    return "redirect:/student/dashboard";
+                default:
+                    return "redirect:/login";
+            }
         } catch (StatusRuntimeException e) {
             System.err.println("Login failed: " + e.getStatus());
             ra.addFlashAttribute("error", "Login failed: " + e.getStatus().getCode());
