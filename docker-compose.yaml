@@ -37,14 +37,20 @@ services:
       SPRING_CONFIG_IMPORT: configtree:/run/secrets/
       SPRING_GRPC_SERVER_PORT: "9090"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: "60000"
     networks:
       frontend:
         ipv4_address: 172.28.0.11
       backend:
         ipv4_address: 172.28.1.11
+    restart: on-failure
     depends_on:
       db-primary:
-        condition: service_healthy
+        condition: service_started
+        required: false
+      db-replica:
+        condition: service_started
+        required: false
     
   grades:
     build:
@@ -59,14 +65,20 @@ services:
       SPRING_CONFIG_IMPORT: configtree:/run/secrets/
       SPRING_GRPC_SERVER_PORT: "9090"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: "60000"
     networks:
       frontend:
         ipv4_address: 172.28.0.12
       backend:
         ipv4_address: 172.28.1.12
+    restart: on-failure
     depends_on:
       db-primary:
-        condition: service_healthy
+        condition: service_started
+        required: false
+      db-replica:
+        condition: service_started
+        required: false
 
   courses:
     build:
@@ -81,48 +93,44 @@ services:
       SPRING_CONFIG_IMPORT: configtree:/run/secrets/
       SPRING_GRPC_SERVER_PORT: "9090"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "10"
+      SPRING_DATASOURCE_HIKARI_MAX_LIFETIME: "60000"
     networks:
       frontend:
         ipv4_address: 172.28.0.13
       backend:
         ipv4_address: 172.28.1.13
+    restart: on-failure
     depends_on:
       db-primary:
-        condition: service_healthy
+        condition: service_started
+        required: false
+      db-replica:
+        condition: service_started
+        required: false
 
   db-primary:
     image: postgres:17
     user: postgres
+    restart: on-failure
     environment:
       POSTGRES_DB: appdb
       POSTGRES_USER: app
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       PGCONNECT_TIMEOUT: "3"
+      PEER: "172.28.1.15"
+      ALLOW_INIT: "true"
     
     secrets:
       - db_password
       - repl_password
     
-    command:
-      - bash
-      - -c
-      - |
-        export PGPASSWORD="$$(cat /run/secrets/db_password)"
-        set -e
-        if [ "$$(psql -h 172.28.1.15 -U app -d appdb -tAc "select pg_is_in_recovery();")" = "f" ]; then
-          export PGPASSWORD="$$(cat /run/secrets/repl_password)"
-          rm -rf /var/lib/postgresql/data/*
-          pg_basebackup -h 172.28.1.15 -U replicator -D /var/lib/postgresql/data -R -X stream -P
-          chmod 0700 /var/lib/postgresql/data
-          exec postgres
-        else 
-          exec docker-entrypoint.sh postgres -c wal_level=replica -c max_wal_senders=10 -c hot_standby=on
-        fi
+    command: ["bash", "/db-start/start.sh"]
         
 
     volumes:
       - primary-data:/var/lib/postgresql/data
       - ./db:/docker-entrypoint-initdb.d:ro
+      - ./db-start/start.sh:/db-start/start.sh:ro
 
     networks:
       backend:
@@ -137,36 +145,23 @@ services:
   db-replica:
     image: postgres:17
     user: postgres
+    restart: on-failure
     environment:
       PGCONNECT_TIMEOUT: "3"
+      PEER: "172.28.1.14"
+      ALLOW_INIT: "false"
       
     secrets:
       - db_password
       - repl_password
-    
-    depends_on:
-      db-primary:
-        condition: service_healthy
-    
-    command:
-      - bash
-      - -c
-      - |
-        export PGPASSWORD="$$(cat /run/secrets/db_password)"
-        set -e
-        if [ "$$(psql -h 172.28.1.14 -U app -d appdb -tAc "select pg_is_in_recovery();")" = "f" ]; then
-          export PGPASSWORD="$$(cat /run/secrets/repl_password)"
-          rm -rf /var/lib/postgresql/data/*
-          pg_basebackup -h 172.28.1.14 -U replicator -D /var/lib/postgresql/data -R -X stream -P
-          chmod 0700 /var/lib/postgresql/data
-          exec postgres
-        else
-          exec docker-entrypoint.sh postgres -c wal_level=replica -c max_wal_senders=10 -c hot_standby=on
-        fi
+
+    # No depends_on: start.sh waits for (and retries against) its partner itself.
+    command: ["bash", "/db-start/start.sh"]
 
     
     volumes:
       - replica-data:/var/lib/postgresql/data
+      - ./db-start/start.sh:/db-start/start.sh:ro
 
     networks:
       backend:
@@ -181,18 +176,22 @@ services:
   db-watchdog:
     image: postgres:17
     command: ["bash", "/scripts/watchdog.sh"]
+    restart: on-failure
     volumes:
-      - ./watchdog:/scripts:ro        
+      - ./watchdog:/scripts:ro
     secrets:
       - db_password
     networks:
       backend:
         ipv4_address: 172.28.1.16
+    # Must run even when a DB node is down: that's exactly when it's needed.
     depends_on:
       db-primary:
-        condition: service_healthy
+        condition: service_started
+        required: false
       db-replica:
-        condition: service_healthy
+        condition: service_started
+        required: false
 
 
 volumes:
