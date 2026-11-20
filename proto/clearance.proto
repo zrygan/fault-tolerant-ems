@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package ems.clearance;
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.ems.proto.clearance";
+
+service ClearanceService {
+    rpc ListMyClearances (ListMyClearancesRequest) returns (ListMyClearancesResponse);
+    rpc ListStudentClearances (ListStudentClearancesRequest) returns (ListStudentClearancesResponse);
+    rpc PlaceHold (PlaceHoldRequest) returns (PlaceHoldResponse);
+    rpc ResolveHold (ResolveHoldRequest) returns (ResolveHoldResponse);
+}
+
+message ListMyClearancesRequest {
+    bool unresolved_only = 1;
+}
+ 
+message ListMyClearancesResponse {
+    repeated ClearanceInfo clearances = 1;
+}
+ 
+message ListStudentClearancesRequest {
+    int64 student_id = 1;
+    bool unresolved_only = 2;
+}
+ 
+message ListStudentClearancesResponse {
+    repeated ClearanceInfo clearances = 1;
+}
+ 
+message PlaceHoldRequest {
+    int64 student_id = 1;
+    string hold_type = 2;
+    string remarks = 3;
+}
+ 
+message PlaceHoldResponse {
+    ClearanceInfo clearance = 1;
+}
+ 
+message ResolveHoldRequest {
+    int64 clearance_id = 1;
+}
+ 
+message ResolveHoldResponse {
+    ClearanceInfo clearance = 1;
+}
+
+message ClearanceInfo {
+    int64 id = 1;
+    int64 student_id = 2;
+    string hold_type = 3;
+    string remarks = 4;
+    int64 placed_by = 5;
+    string placed_by_name = 6;
+    google.protobuf.Timestamp placed_on = 7;
+    optional int64 resolved_by = 8;
+    optional string resolved_by_name = 9;
+    google.protobuf.Timestamp resolved_on = 10;
+}
