@@ -38,7 +38,9 @@ INSERT INTO users (email, password_hash, full_name, role) VALUES
 ('tandang_sora@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Tandang Sora', 'student'),
 ('leona_florentino@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Leona Florentino', 'student'),
 ('francisco_balagtas@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Francisco Balagtas', 'student'),
-('mister_dog@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Mister Dog', 'student');
+('mister_dog@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Mister Dog', 'student'),
+('max.admin@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Max', 'admin'),
+('raichu.admin@university.edu', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'Raichu', 'admin');
 
 -- 2. Insert 20 Courses (IDs 1-20)
 INSERT INTO courses (code, title, units) VALUES
