@@ -75,7 +75,6 @@ CREATE TABLE
                 'financial_hold'
             )
         ),
-        remarks TEXT,
         placed_by BIGINT NOT NULL REFERENCES users (id),
         placed_on TIMESTAMPTZ NOT NULL DEFAULT now (),
         resolved_by BIGINT REFERENCES users (id),
