@@ -39,11 +39,12 @@ public class EnrollmentService {
         //  and clearance/
         var holds = enrollmentRepo.findActiveHolds(studentId);
         if (!holds.isEmpty()) {
-            var hold = holds.get(0);
+            String holdList = holds.stream()
+                    .map(h -> h.getHoldType() + " with " + h.getAdminName())
+                    .collect(java.util.stream.Collectors.joining(", "));
             throw Status.FAILED_PRECONDITION
                     .withDescription("Failed to enroll " + section.getCourseName() + ", " + section.getSectionCode()
-                            + ".\nPlease settle clearance hold: " + hold.getHoldType() + " with " + hold.getAdminName()
-                            + ".")
+                            + ".\nPlease settle clearance hold: " + holdList + ".")
                     .asRuntimeException();
         }
 
