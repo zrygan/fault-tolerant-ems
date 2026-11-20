@@ -74,7 +74,7 @@ CREATE TABLE clearances (
     remarks     TEXT,
     placed_by   BIGINT      NOT NULL REFERENCES users (id),
     placed_on   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    resolved_on TIMESTAMPTZ                          -- NULL while active; set to now() when lifted
+    resolved_on TIMESTAMPTZ -- NULL while active; set to now() when lifted
 );
 
 -- ============================================================
