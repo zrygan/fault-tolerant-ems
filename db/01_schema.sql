@@ -67,6 +67,7 @@ CREATE TABLE
     clearances (
         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         student_id BIGINT NOT NULL REFERENCES users (id),
+        admin_id BIGINT NOT NULL REFERENCES users (id),
         hold_type TEXT NOT NULL CHECK (
             hold_type IN (
                 'incomplete_records',
@@ -75,9 +76,7 @@ CREATE TABLE
                 'financial_hold'
             )
         ),
-        placed_by BIGINT NOT NULL REFERENCES users (id),
         placed_on TIMESTAMPTZ NOT NULL DEFAULT now (),
-        resolved_by BIGINT REFERENCES users (id),
         resolved_on TIMESTAMPTZ -- NULL while active; set to now() when lifted
     );
 
