@@ -6,7 +6,7 @@ CREATE TABLE users (
     email         TEXT        NOT NULL UNIQUE,
     password_hash TEXT        NOT NULL,              -- bcrypt hash, never the plain password
     full_name     TEXT        NOT NULL,
-    role          TEXT        NOT NULL CHECK (role IN ('student', 'faculty')),
+    role          TEXT        NOT NULL CHECK (role IN ('student', 'faculty', 'admin')),
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
