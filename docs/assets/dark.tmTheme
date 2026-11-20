@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>name</key>
+  <string>EMS Dark</string>
+  <key>settings</key>
+  <array>
+    <dict>
+      <key>settings</key>
+      <dict>
+        <key>background</key><string>#1E1E1E</string>
+        <key>foreground</key><string>#D4D4D4</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>comment, punctuation.definition.comment</string>
+      <key>settings</key><dict><key>foreground</key><string>#6A9955</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>keyword, storage, storage.modifier, constant.language</string>
+      <key>settings</key><dict><key>foreground</key><string>#569CD6</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>keyword.control</string>
+      <key>settings</key><dict><key>foreground</key><string>#C586C0</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>keyword.operator</string>
+      <key>settings</key><dict><key>foreground</key><string>#D4D4D4</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>string, string.quoted, string.unquoted</string>
+      <key>settings</key><dict><key>foreground</key><string>#CE9178</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>constant.numeric, constant.character</string>
+      <key>settings</key><dict><key>foreground</key><string>#B5CEA8</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>entity.name.function, variable.function, support.function, meta.function-call</string>
+      <key>settings</key><dict><key>foreground</key><string>#DCDCAA</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>entity.name.class, entity.name.type, support.class, support.type, storage.type.class, storage.type.java, entity.other.inherited-class</string>
+      <key>settings</key><dict><key>foreground</key><string>#4EC9B0</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>storage.type.primitive, storage.type.annotation, punctuation.definition.annotation, meta.annotation</string>
+      <key>settings</key><dict><key>foreground</key><string>#569CD6</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>variable, variable.parameter, variable.other, meta.definition.variable</string>
+      <key>settings</key><dict><key>foreground</key><string>#9CDCFE</string></dict>
+    </dict>
+    <dict>
+      <key>scope</key><string>entity.name.tag, entity.name.tag.yaml, meta.mapping.key</string>
+      <key>settings</key><dict><key>foreground</key><string>#569CD6</string></dict>
+    </dict>
+  </array>
+</dict>
+</plist>
