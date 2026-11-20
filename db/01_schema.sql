@@ -76,22 +76,6 @@ CREATE TABLE clearances (
     placed_on   TIMESTAMPTZ NOT NULL DEFAULT now(),
     resolved_on TIMESTAMPTZ                          -- NULL while active; set to now() when lifted
 );
--- One row per hold placed on a student; active while resolved_on IS NULL.
-CREATE TABLE clearances (
-CREATE TABLE clearances (
-    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    student_id  BIGINT      NOT NULL REFERENCES users (id),
-    hold_type   TEXT        NOT NULL CHECK (hold_type IN (
-                    'incomplete_records',
-                    'disciplinary_hold',
-                    'library_hold',
-                    'financial_hold'
-                )),
-    remarks     TEXT,
-    placed_by   BIGINT      NOT NULL REFERENCES users (id),
-    placed_on   TIMESTAMPTZ NOT NULL DEFAULT now(),
-    resolved_on TIMESTAMPTZ                          -- NULL on creation; set to now() when lifted
-);
 
 -- ============================================================
 -- Indexes for the lookups the app does most
