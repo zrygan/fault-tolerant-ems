@@ -92,20 +92,33 @@ services:
 
   db-primary:
     image: postgres:17
+    user: postgres
     environment:
       POSTGRES_DB: appdb
       POSTGRES_USER: app
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      PGCONNECT_TIMEOUT: "3"
     
     secrets:
       - db_password
       - repl_password
     
     command:
-      postgres
-      -c wal_level=replica
-      -c max_wal_senders=10
-      -c hot_standby=on
+      - bash
+      - -c
+      - |
+        export PGPASSWORD="$$(cat /run/secrets/db_password)"
+        set -e
+        if [ "$$(psql -h 172.28.1.15 -U app -d appdb -tAc "select pg_is_in_recovery();")" = "f" ]; then
+          export PGPASSWORD="$$(cat /run/secrets/repl_password)"
+          rm -rf /var/lib/postgresql/data/*
+          pg_basebackup -h 172.28.1.15 -U replicator -D /var/lib/postgresql/data -R -X stream -P
+          chmod 0700 /var/lib/postgresql/data
+          exec postgres
+        else 
+          exec docker-entrypoint.sh postgres -c wal_level=replica -c max_wal_senders=10 -c hot_standby=on
+        fi
+        
 
     volumes:
       - primary-data:/var/lib/postgresql/data
@@ -124,8 +137,13 @@ services:
   db-replica:
     image: postgres:17
     user: postgres
+    environment:
+      PGCONNECT_TIMEOUT: "3"
+      
     secrets:
+      - db_password
       - repl_password
+    
     depends_on:
       db-primary:
         condition: service_healthy
@@ -134,13 +152,18 @@ services:
       - bash
       - -c
       - |
+        export PGPASSWORD="$$(cat /run/secrets/db_password)"
         set -e
-        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+        if [ "$$(psql -h 172.28.1.14 -U app -d appdb -tAc "select pg_is_in_recovery();")" = "f" ]; then
           export PGPASSWORD="$$(cat /run/secrets/repl_password)"
+          rm -rf /var/lib/postgresql/data/*
           pg_basebackup -h 172.28.1.14 -U replicator -D /var/lib/postgresql/data -R -X stream -P
           chmod 0700 /var/lib/postgresql/data
+          exec postgres
+        else
+          exec docker-entrypoint.sh postgres -c wal_level=replica -c max_wal_senders=10 -c hot_standby=on
         fi
-        exec postgres
+
     
     volumes:
       - replica-data:/var/lib/postgresql/data
