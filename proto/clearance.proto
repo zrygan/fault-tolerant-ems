@@ -10,11 +10,23 @@ service ClearanceService {
     // create
     rpc PlaceHold (PlaceHoldRequest) returns (PlaceHoldResponse);
     // reads
+    rpc ListStudents (ListStudentsRequest) returns (ListStudentsResponse);
     rpc ListStudentClearances (ListStudentClearancesRequest) returns (ListStudentClearancesResponse);
     rpc ListStudentClearancesByHoldType (ListStudentClearancesByHoldTypeRequest) returns (ListStudentClearancesByHoldTypeResponse);
     rpc ListStudentClearancesByPlacedBy (ListStudentClearancesByPlacedByRequest) returns (ListStudentClearancesByPlacedByResponse);
     // update/delete
     rpc ResolveHold (ResolveHoldRequest) returns (ResolveHoldResponse);
+}
+
+message StudentOption {
+    int64 id = 1;
+    string full_name = 2;
+}
+
+message ListStudentsRequest {}
+
+message ListStudentsResponse {
+    repeated StudentOption students = 1;
 }
 
 message ClearanceInfo {

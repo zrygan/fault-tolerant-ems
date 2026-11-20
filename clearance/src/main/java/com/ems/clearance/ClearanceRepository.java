@@ -39,4 +39,17 @@ public interface ClearanceRepository extends JpaRepository<Clearance, Long> {
     SELECT full_name 
     FROM users 
     WHERE id = :userId""", nativeQuery = true) String findUserNameById(@Param("userId") Long userId);
+
+  interface StudentRow {
+    Long getId();
+    String getFullName();
+  }
+
+  @Query(value = """
+    SELECT id AS "id", full_name AS "fullName"
+    FROM users
+    WHERE role = 'student'
+    ORDER BY id
+    """, nativeQuery = true)
+  List<StudentRow> findAllStudents();
 }

@@ -95,6 +95,24 @@ public class ClearanceGrpcService extends ClearanceServiceGrpc.ClearanceServiceI
   }
 
   @Override
+  public void listStudents(ListStudentsRequest req, StreamObserver<ListStudentsResponse> out) {
+    if (requireAdmin(out) == null) return;
+
+    try {
+      var res = ListStudentsResponse.newBuilder();
+      clearances.findAllStudents().forEach(s -> res.addStudents(
+          StudentOption.newBuilder()
+              .setId(s.getId())
+              .setFullName(s.getFullName())
+              .build()));
+      out.onNext(res.build());
+      out.onCompleted();
+    } catch (Exception e) {
+      out.onError(Status.INTERNAL.asRuntimeException());
+    }
+  }
+
+  @Override
   public void listStudentClearances(ListStudentClearancesRequest req,
       StreamObserver<ListStudentClearancesResponse> out) {
     Long callerId = JwtServerInterceptor.USER_ID.get();
