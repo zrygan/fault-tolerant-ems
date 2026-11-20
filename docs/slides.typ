@@ -156,8 +156,7 @@
     networks:
       frontend: { ipv4_address: 172.28.0.13 }
       backend:  { ipv4_address: 172.28.1.13 }
-    depends_on:
-      db-primary: { condition: service_healthy }
+    restart: on-failure
   ```,
   code-size: 10pt,
   [
@@ -644,25 +643,25 @@
   [
     ```bash
     # watchdog/watchdog.sh (condensed)
-    PRIMARY=172.28.1.14
-    REPLICA=172.28.1.15
-    FAILS=0
-    LIMIT=3
-
+    NODES=(172.28.1.14 172.28.1.15)
     while true; do
-      if pg_isready -h $PRIMARY -p 5432 -U app -d appdb > /dev/null; then
-        FAILS=0
-      else
-        FAILS=$((FAILS + 1))
-      fi
+      PRIMARIES=() BEST=""
+      for node in "${NODES[@]}"; do
+        # "role|timeline|wal position", empty if down
+        IFS='|' read -r role tl lsn <<< "$(node_info "$node")"
+        [ "$role" = f ] && PRIMARIES+=("$node")
+        # BEST = standby with the highest timeline, then lsn
+      done
 
-      if [ "$FAILS" -ge "$LIMIT" ] &&
-         pg_isready -h $REPLICA -p 5432 -U app -d appdb > /dev/null; then
-        psql -h $REPLICA -U app -d appdb -c "select pg_promote();"
-        TMP=$PRIMARY          # swap roles, then keep watching
-        PRIMARY=$REPLICA
-        REPLICA=$TMP
-        FAILS=0
+      if [ "${#PRIMARIES[@]}" -eq 0 ]; then
+        NO_PRIMARY=$((NO_PRIMARY + 1))
+        if [ "$NO_PRIMARY" -ge 3 ] && [ -n "$BEST" ]; then
+          RESULT="$(psql -h "$BEST" -U app -d appdb \
+            -tAc "select pg_promote(true, 30);")"
+          [ "$RESULT" = t ] && NO_PRIMARY=0
+        fi
+      else
+        NO_PRIMARY=0
       fi
       sleep 5
     done
@@ -675,15 +674,15 @@
   ],
   code-size: 10pt,
   [
-    A watchdog container promotes the standby when the primary stops answering. The services then follow on their own:
+    A watchdog container is the only thing that promotes a node. The services then follow on their own:
 
-    - _pg\_isready_: checks the current primary every 5 seconds; after 3 misses in a row (about 15 s) the watchdog runs `pg_promote()` on the standby
-    - _standby check_: it only promotes if the standby answers, so it never promotes a node that is also down
-    - _role swap_: after a promotion it swaps `PRIMARY` and `REPLICA` and keeps looping, so failover works in both directions, as many times as needed
+    - _real roles_: every 5 seconds it asks both nodes for their role, timeline and WAL position, so it remembers nothing and can restart at any time
+    - _newest data wins_: after 3 checks in a row with no primary (about 20 s) it promotes the standby with the highest timeline, a counter that goes up on every promotion, then the furthest WAL position
+    - _checked promotion_: `pg_promote(true, 30)` returns `t` only once the node really is primary; otherwise it retries on the next loop
     - _preferPrimary_: each service's JDBC URL lists both hosts, so new connections go to whichever one is the primary
-    - _Hikari pool_: failed connections are retired and new ones open against the new primary, with no restart
+    - _Hikari pool_: connections are replaced every 60 s, so none stay on a standby after a promotion
 
-    Requiring three misses in a row means one slow health check does not trigger a promotion.
+    One decider means two nodes never both promote themselves.
   ],
 )
 
@@ -692,39 +691,41 @@
 #slide(
   [Rejoining After a Failure],
   ```yaml
-  # docker-compose.yaml: db-replica (db-primary runs the same
-  # check, pointed at 172.28.1.15)
-  environment:
-    PGCONNECT_TIMEOUT: "3"
-  command:
-    - bash
-    - -c
-    - |
-      export PGPASSWORD="$$(cat /run/secrets/db_password)"
-      set -e
-      if [ "$$(psql -h 172.28.1.14 -U app -d appdb -tAc \
-            "select pg_is_in_recovery();")" = "f" ]; then
-        export PGPASSWORD="$$(cat /run/secrets/repl_password)"
-        rm -rf /var/lib/postgresql/data/*
-        pg_basebackup -h 172.28.1.14 -U replicator \
-          -D /var/lib/postgresql/data -R -X stream -P
-        chmod 0700 /var/lib/postgresql/data
-        exec postgres
-      else
-        exec docker-entrypoint.sh postgres -c wal_level=replica \
-          -c max_wal_senders=10 -c hot_standby=on
-      fi
+  # db-start/start.sh (condensed; both nodes run it,
+  # PEER is the other node's address)
+  PEER_INFO="$(psql -h "$PEER" -U app -d appdb -tAc \
+    "select pg_is_in_recovery(), timeline_id
+     from pg_control_checkpoint();" || true)"  # "f|2", empty = down
+
+  if [ "$PEER_ROLE" = f ]; then                  # peer is primary
+    [ -f "$DATA/standby.signal" ] && [ ! -f "$WAS_PRIMARY" ] \
+      && [ "$MY_TL" -le "$PEER_TL" ] && start_postgres  # catch up
+    copy_from_peer     # pg_basebackup to a temp folder, then swap
+    start_postgres
+  fi
+
+  if [ ! -s "$DATA/PG_VERSION" ]; then           # empty disk
+    [ "$ALLOW_INIT" = true ] && [ -z "$PEER_INFO" ] && start_postgres
+    exit 1                                       # Docker retries
+  fi
+
+  if [ "$PEER_ROLE" = t ] && [ ! -f "$DATA/standby.signal" ] \
+     && [ "$MY_TL" -ge "$PEER_TL" ]; then
+    start_postgres                     # I was primary, still newest
+  fi
+  start_as_standby          # unsure: read-only, the watchdog decides
   ```,
   code-size: 10pt,
   [
     A node that comes back after a failover still holds its old files. Without a check, it would start as a second primary with stale data, and `preferPrimary` could send writes to it. This is called split brain. Every database node prevents it at startup:
 
-    - _pg\_is\_in\_recovery()_: the node asks its peer for its role; `f` means the peer is the primary
-    - _peer is primary_: wipe the local data, copy the peer with `pg_basebackup -R`, and start as its standby
-    - _peer is a standby or down_: keep the local data and start normally; on the first boot of .14, `docker-entrypoint.sh` loads the schema
-    - _PGCONNECT\_TIMEOUT_: a dead peer makes the check give up after 3 seconds instead of hanging
+    - _peer's role and timeline_: one query; a dead peer makes it give up after 3 seconds
+    - _peer is primary_: a standby that is not ahead just reconnects and catches up; anything else copies the peer into a temp folder and only then replaces its old data
+    - _empty disk_: only .14 (`ALLOW_INIT`) may create a new database, and only when no peer answers
+    - _I was primary_: stay primary only if the peer is a standby on the same or an older timeline
+    - _anything else_: start read-only and let the watchdog choose
 
-    A node only wipes its data when there is a primary to copy from. A returning node always joins as a standby.
+    A node only becomes primary on its own when it is sure it has the newest data.
   ],
 )
 
@@ -743,13 +744,13 @@
       fill: (x, y) => if y == 0 { code-bg } else { none },
       table.header([Step], [Event], [.14], [.15], [What happens]),
       [0], [Start], [primary], [standby], [.15 streams every change from .14],
-      [1], [.14 stops], [down], [*primary*], [The watchdog promotes .15 after 3 missed checks, then watches .15],
+      [1], [.14 stops], [down], [*primary*], [The watchdog sees no primary for 3 checks and promotes .15],
       [2], [.14 starts], [*standby*], [primary], [.14's startup check sees .15 is primary and re-copies from it],
-      [3], [.15 stops], [*primary*], [down], [The watchdog promotes .14, then watches .14],
+      [3], [.15 stops], [*primary*], [down], [The watchdog sees no primary for 3 checks and promotes .14],
       [4], [.15 starts], [primary], [*standby*], [.15 re-copies from .14. The roles are back to step 0],
     )
     #v(0.2in)
-    We ran this cycle end to end. One row was written on .15 after step 1 and another on .14 after step 3. After step 4, both rows were on .15.
+    We ran this cycle end to end, writing a row after steps 1 and 3. We also stopped both nodes after step 3 and started them together, before .15 had rejoined. .14 had the higher timeline, so it became primary, and every row was on both nodes.
   ],
 )
 
@@ -770,7 +771,7 @@
       [No automatic switch back], [Each switch means a few seconds of failed writes, and a node that failed once may fail again and keep taking the role back], [The roles stay swapped until a full reset with `docker compose down -v`],
       [Asynchronous replication], [Writes stay fast and keep working while the standby is down], [Writes in the last moment before a crash may not reach the standby],
       [One watchdog decides], [One short script that is easy to follow and test], [If the watchdog stops, there is no failover, but the database keeps serving],
-      [No shared record of the last primary], [Keeps the setup to plain PostgreSQL containers], [Restarting the whole stack while .14 is down can bring .14 back with old data. Tools like Patroni (with etcd) or pg_auto_failover keep that record outside the databases],
+      [Newest timeline wins], [Keeps the setup to plain PostgreSQL containers; an unsure node starts read-only instead of guessing], [If only one node answers, it is promoted even if the missing one had newer data. Patroni (with etcd) or pg_auto_failover avoid this by keeping a record outside the databases],
     )
   ],
 )
@@ -793,8 +794,8 @@
       [auth], [New logins], [Signed-in users: courses and grades verify tokens themselves],
       [courses], [Course list, enroll, drop, and the faculty section picker], [Student grades, login, logout],
       [grades], [Viewing and uploading grades], [Course list, enroll, drop, login, logout],
-      [database primary], [Database calls, for about 15 s], [Everything, once the watchdog promotes the standby; the old primary rejoins as a standby when it restarts],
-      [database standby], [Nothing visible; only the backup is lost], [Everything; the node re-copies and rejoins when it restarts],
+      [database primary], [Database writes, for about 20 s], [Everything, once the watchdog promotes the standby; the old primary rejoins as a standby when it restarts],
+      [database standby], [Nothing visible; only the backup is lost], [Everything; the node catches up and rejoins when it restarts],
       [db-watchdog], [Automatic failover], [Everything; both databases keep running],
     )
     #v(0.2in)
