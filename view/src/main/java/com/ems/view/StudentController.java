@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpSession;
 import io.grpc.StatusRuntimeException;
 
+import com.ems.proto.clearance.ClearanceServiceGrpc;
 import com.ems.proto.courses.*;
 import com.ems.proto.grades.*;
 
@@ -19,13 +20,16 @@ import com.ems.proto.grades.*;
 public class StudentController {
     private final CourseServiceGrpc.CourseServiceBlockingStub courses;
     private final GradesServiceGrpc.GradesServiceBlockingStub grades;
+    private final ClearanceServiceGrpc.ClearanceServiceBlockingStub clearance;
     private final GrpcAuth grpcAuth;
 
     public StudentController(CourseServiceGrpc.CourseServiceBlockingStub courses,
             GradesServiceGrpc.GradesServiceBlockingStub grades,
+            ClearanceServiceGrpc.ClearanceServiceBlockingStub clearance,
             GrpcAuth grpcAuth) {
         this.courses = courses;
         this.grades = grades;
+        this.clearance = clearance;
         this.grpcAuth = grpcAuth;
     }
 
