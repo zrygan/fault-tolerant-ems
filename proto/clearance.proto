@@ -10,7 +10,6 @@ service ClearanceService {
     // create
     rpc PlaceHold (PlaceHoldRequest) returns (PlaceHoldResponse);
     // reads
-    rpc ListMyClearances (ListMyClearancesRequest) returns (ListMyClearancesResponse);
     rpc ListStudentClearances (ListStudentClearancesRequest) returns (ListStudentClearancesResponse);
     rpc ListStudentClearancesByHoldType (ListStudentClearancesByHoldTypeRequest) returns (ListStudentClearancesByHoldTypeResponse);
     rpc ListStudentClearancesByPlacedBy (ListStudentClearancesByPlacedByRequest) returns (ListStudentClearancesByPlacedByResponse);
