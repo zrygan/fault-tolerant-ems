@@ -31,7 +31,7 @@
 
 // ---------- building blocks ----------
 
-#let code-panel(code, size: 10.5pt) = block(
+#let code-panel(code, size: 10pt) = block(
   fill: code-bg,
   inset: (x: 16pt, y: 14pt),
   width: 100%,
@@ -45,33 +45,42 @@
 
 #let slide-title(title) = text(font: title-font, weight: "light", size: 44pt, title)
 
-// Code on the left, explanation on the right, both centered vertically.
-#let slide(title, code, body, split: (52%, 1fr), code-size: 10.5pt) = {
+// Full-width content under the title, centered vertically.
+#let wide-slide(title, body, gutter: 0.25in) = {
   pagebreak(weak: true)
   grid(
     rows: (auto, 1fr),
-    row-gutter: 0.2in,
-    align: (x, y) => if y == 0 { left + top } else { left + horizon },
-    slide-title(title),
-    grid(
-      columns: split,
-      column-gutter: 0.5in,
-      align: left + horizon,
-      code-panel(code, size: code-size),
-      body,
-    ),
-  )
-}
-
-// Full-width content under the title.
-#let wide-slide(title, body) = {
-  pagebreak(weak: true)
-  grid(
-    rows: (auto, 1fr),
-    row-gutter: 0.25in,
+    row-gutter: gutter,
     align: (x, y) => if y == 0 { left + top } else { left + horizon },
     slide-title(title),
     body,
+  )
+}
+
+// Code on the left, explanation on the right.
+#let slide(title, code, body, split: (52%, 1fr), code-size: 10pt) = wide-slide(
+  title,
+  gutter: 0.2in,
+  grid(
+    columns: split,
+    column-gutter: 0.5in,
+    align: left + horizon,
+    code-panel(code, size: code-size),
+    body,
+  ),
+)
+
+// Table with a dark header row and thin row dividers.
+#let dark-table(columns, size: none, inset: (x: 12pt, y: 9pt), ..cells) = {
+  set text(size: size) if size != none
+  show table.cell.where(y: 0): set text(fill: white, weight: "bold")
+  table(
+    columns: columns,
+    inset: inset,
+    align: left + horizon,
+    stroke: (bottom: 0.6pt + luma(200)),
+    fill: (x, y) => if y == 0 { code-bg } else { none },
+    ..cells,
   )
 }
 
@@ -113,14 +122,13 @@
     spring.grpc.client.channels.grades.address=${GRADES_ADDRESS}
     ```
   ],
-  code-size: 10pt,
   [
     The view is the MVC front end. Controllers handle each click, Thymeleaf templates draw the pages, and every piece of data comes from another node over gRPC.
 
-    - _only public port_: port 3000 on the host maps to 8080 in the container; no other node is published
-    - _frontend network only_: it has no address on the backend network, so it cannot open a database connection at all
-    - _no secrets_: it gets neither `db_password` nor `jwt_secret`; it stores tokens but never signs or checks them
-    - _address variables_: each feature node is found through an environment variable, so a node can move to another machine with only a config change
+    - _only public port_: Port 3000 on the host maps to port 8080 in the container. No other node is published.
+    - _frontend network only_: The view has no address on the backend network, so it cannot open a database connection at all.
+    - _no secrets_: The view gets neither `db_password` nor `jwt_secret`. It stores tokens, but it never signs or checks them.
+    - _address variables_: The view finds each feature node through an environment variable, so a node can move to another machine with only a config change.
 
     If the view goes down, the website is gone, but every feature node keeps running behind it.
   ],
@@ -158,14 +166,13 @@
       backend:  { ipv4_address: 172.28.1.13 }
     restart: on-failure
   ```,
-  code-size: 10pt,
   [
     Auth, courses and grades are three separate Spring Boot apps. Each has its own Gradle project, Dockerfile and container, and they share nothing except the `.proto` files.
 
-    - _two networks each_: a frontend address to answer the view, and a backend address to reach the database
-    - _own secrets_: each one receives `db_password` and `jwt_secret` as Docker secrets, read through Spring's configtree
-    - _own connection pool_: up to 10 database connections per node, so one busy node cannot use up another's
-    - _own token check_: each has its own copy of `JwtService`, so none of them needs auth to be up
+    - _two networks each_: Each node has a frontend address to answer the view and a backend address to reach the database.
+    - _own secrets_: Each node receives `db_password` and `jwt_secret` as Docker secrets and reads them through Spring's configtree.
+    - _own connection pool_: Each node keeps up to 10 database connections, so one busy node cannot use up another's.
+    - _own token check_: Each node has its own copy of `JwtService`, so none of them needs auth to be up.
 
     Stopping one container removes exactly one feature area.
   ],
@@ -197,21 +204,12 @@
     networks:
       backend: { ipv4_address: 172.28.1.16 }
   ```,
-  code-size: 10pt,
   split: (42%, 1fr),
   [
     Docker only routes traffic between containers that share a network. The two networks overlap only at the three feature nodes.
 
     #v(0.05in)
-    #{
-      set text(size: 14pt)
-      show table.cell.where(y: 0): set text(fill: white, weight: "bold")
-      table(
-        columns: (1fr, 1fr, 1fr),
-        inset: (x: 10pt, y: 6pt),
-        align: left + horizon,
-        stroke: (bottom: 0.6pt + luma(200)),
-        fill: (x, y) => if y == 0 { code-bg } else { none },
+    #dark-table((1fr, 1fr, 1fr), size: 14pt, inset: (x: 10pt, y: 6pt),
         table.header([Node], [frontend], [backend]),
         [view], [172.28.0.10], [none],
         [auth], [172.28.0.11], [172.28.1.11],
@@ -220,8 +218,7 @@
         [db-primary], [none], [172.28.1.14],
         [db-replica], [none], [172.28.1.15],
         [db-watchdog], [none], [172.28.1.16],
-      )
-    }
+    )
     #v(0.05in)
     Fixed addresses mean the view's settings and the database URL never change between runs.
   ],
@@ -261,14 +258,13 @@
       ...
   );
   ```,
-  code-size: 10pt,
   [
     All feature nodes share one PostgreSQL database, but each table has exactly one node that writes to it.
 
-    - _auth_: writes `users`, and is the only node that checks passwords
-    - _courses_: writes `courses`, `sections` and `enrollments`; reads `users` for faculty names
-    - _grades_: writes `grades`; reads enrollments, sections and courses to label each grade
-    - _foreign keys and CHECKs_: the database enforces the rules itself, whichever node writes
+    - _auth_: Auth writes `users`, and it is the only node that checks passwords.
+    - _courses_: Courses writes `courses`, `sections` and `enrollments`. It reads `users` to show faculty names.
+    - _grades_: Grades writes `grades`. It reads enrollments, sections and courses to label each grade.
+    - _foreign keys and CHECKs_: The database enforces the rules itself, no matter which node writes.
 
     One shared database keeps joins simple, but every feature node depends on it. That is why it is replicated.
   ],
@@ -309,14 +305,13 @@
     Role role = 4;
   }
   ```,
-  code-size: 10pt,
   [
     The auth node owns the `users` table and is the only node that ever sees a password. Its contract has three calls:
 
-    - _Login()_: takes an email and password, returns a signed JWT plus the user's id, name and role; a wrong password returns `UNAUTHENTICATED`
-    - _Logout()_: an empty call; the view clears its own session, so logging out does not depend on auth being up
-    - _GetUser()_: returns the caller's profile, read from the token in the request metadata
-    - _Role_: the view uses it right after login to send students and faculty to different dashboards
+    - _Login()_: It takes an email and password and returns a signed JWT with the user's id, name and role. A wrong password returns `UNAUTHENTICATED`.
+    - _Logout()_: This is an empty call. The view clears its own session, so logging out does not depend on auth being up.
+    - _GetUser()_: It returns the caller's profile, which it reads from the token in the request metadata.
+    - _Role_: Right after login, the view uses the role to send students and faculty to different dashboards.
 
     No request in any contract carries a user id. Identity always comes from the token.
   ],
@@ -355,15 +350,14 @@
     string term = 10;
   }
   ```,
-  code-size: 10pt,
   [
     The courses node owns `courses`, `sections` and `enrollments`. Every reply describes a section with the same `SectionInfo` message, so every page shows sections the same way.
 
-    - _ListSection()_: lists sections for a term; with `mine_only`, only the caller's own sections, which feeds the faculty grade page
-    - _EnrollCourse()_: adds the caller to a section and returns the new seat count
-    - _ListEnrollments()_: the sections the caller is enrolled in
-    - _DropCourse()_: removes the caller from a section and returns the updated section
-    - _is\_open_: worked out as `enrolled_count < capacity` on every reply, so it is never out of date
+    - _ListSection()_: It lists the sections for a term. With `mine_only`, it lists only the caller's own sections, which is what the faculty grade page uses.
+    - _EnrollCourse()_: It adds the caller to a section and returns the new seat count.
+    - _ListEnrollments()_: It returns the sections the caller is enrolled in.
+    - _DropCourse()_: It removes the caller from a section and returns the updated section.
+    - _is\_open_: It is worked out as `enrolled_count < capacity` on every reply, so it is never out of date.
 
     Requests only name a section. Who is enrolling comes from the token.
   ],
@@ -403,14 +397,13 @@
     optional double current_grade = 3;
   }
   ```,
-  code-size: 10pt,
   [
     The grades node owns the `grades` table. A grade is attached to an enrollment, so one id links a student, a section and a grade.
 
-    - _GetGrades()_: every course the caller has taken, with the grade where one exists
-    - _ListGradableStudents()_: the students in one section the caller teaches, with any grade already given
-    - _UploadGrades()_: faculty only; accepts 0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5 or 4.0, then inserts or updates the grade
-    - _optional double_: tells "no grade yet" apart from a real 0.0
+    - _GetGrades()_: It returns every course the caller has taken, with the grade where one exists.
+    - _ListGradableStudents()_: It returns the students in one section the caller teaches, along with any grade already given.
+    - _UploadGrades()_: Only faculty can call it. It accepts 0.0, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5 or 4.0, then inserts or updates the grade.
+    - _optional double_: It lets the reply tell "no grade yet" apart from a real 0.0.
 
     The course details in `GradeRecord` are copied into the reply, so the grades page never needs to call the courses node.
   ],
@@ -450,13 +443,12 @@
     }
     ```
   ],
-  code-size: 10pt,
   [
     All three contracts live in one shared `proto/` folder. Every node compiles them at build time, so client and server always agree on the message format.
 
-    - _protobuf plugin_: generates the Java message classes and gRPC stubs from `../proto` during the Gradle build
-    - _ImplBase_: each service extends the generated base class; Spring gRPC serves it on port 9090
-    - _GrpcClientConfig_: the view builds one blocking stub per node from its address; controllers depend on stubs, never on another node's code
+    - _protobuf plugin_: It generates the Java message classes and gRPC stubs from `../proto` during the Gradle build.
+    - _ImplBase_: Each service extends the generated base class, and Spring gRPC serves it on port 9090.
+    - _GrpcClientConfig_: The view builds one blocking stub per node from its address. Controllers depend on these stubs, never on another node's code.
 
     A failed call arrives as a `StatusRuntimeException` with a code such as `UNAVAILABLE`, which the view can catch and handle.
   ],
@@ -493,13 +485,12 @@
     call.close(Status.UNAUTHENTICATED, new Metadata());
     ```
   ],
-  code-size: 10pt,
   [
     Login happens once, on the auth node. After that, every node checks the session by itself. Sessions are tracked through:
 
-    - _AuthGrpcService.login()_: checks the bcrypt hash, then signs an HS256 JWT holding the user id and role, valid for one hour
-    - _GrpcAuth.withToken()_: the view keeps the token in its `HttpSession` and attaches it as `authorization: Bearer` metadata on every call
-    - _JwtServerInterceptor_: runs before every RPC on courses and grades, verifies the signature and expiry with the shared `jwt_secret`, and puts the caller's id and role in the gRPC context
+    - _AuthGrpcService.login()_: It checks the bcrypt hash, then signs an HS256 JWT that holds the user id and role. The token is valid for one hour.
+    - _GrpcAuth.withToken()_: The view keeps the token in its `HttpSession` and attaches it as `authorization: Bearer` metadata on every call.
+    - _JwtServerInterceptor_: It runs before every RPC on courses and grades. It checks the signature and expiry with the shared `jwt_secret`, then puts the caller's id and role in the gRPC context.
 
     No node calls auth to validate a token, so signed-in users keep working while auth is down.
   ],
@@ -536,13 +527,12 @@
       return enrollmentRepo.save(enrollment);
   }
   ```,
-  code-size: 10pt,
   [
     Enrollment must never overfill a section, so it runs as one database transaction on the courses node. The rules live in:
 
-    - _enrollStudent()_: rejects a section the student is already in, or a second section of the same course (`ALREADY_EXISTS`); rejects a full section (`FAILED_PRECONDITION`); then saves the enrollment and raises the count
-    - _dropStudent()_: refuses once a grade exists, lowers the count, and reopens a section that was full
-    - _CHECK constraint_: the schema itself refuses an `enrolled_count` above `capacity`
+    - _enrollStudent()_: It rejects a section the student is already in, or a second section of the same course, with `ALREADY_EXISTS`. It rejects a full section with `FAILED_PRECONDITION`. Otherwise it saves the enrollment and raises the count.
+    - _dropStudent()_: It refuses once a grade exists. Otherwise it lowers the count and reopens the section if it was full.
+    - _CHECK constraint_: The schema itself refuses an `enrolled_count` above `capacity`.
 
     The student id comes from the verified token, never from the form, so a student can only enroll themselves.
   ],
@@ -578,14 +568,13 @@
       return "redirect:/login";
   }
   ```,
-  code-size: 10pt,
   [
     The view never assumes a node is up. A failed call removes one part of a page instead of crashing it. This is handled through:
 
-    - _try / catch per call_: each gRPC call catches `StatusRuntimeException` and puts a message on the model, so the template still renders instead of a 500 error
-    - _one node per student page_: enroll and drop call only courses; the grades page calls only grades
-    - _logout()_: clears the local session even when auth cannot be reached
-    - _LoginInterceptor_: guards `/student/**` and `/faculty/**` using only the local session, so moving between pages needs no remote call
+    - _try / catch per call_: Each gRPC call catches `StatusRuntimeException` and puts a message on the model, so the template still renders instead of showing a 500 error.
+    - _one node per student page_: Enroll and drop call only courses, and the grades page calls only grades.
+    - _logout()_: It clears the local session even when auth cannot be reached.
+    - _LoginInterceptor_: It guards `/student/**` and `/faculty/**` using only the local session, so moving between pages needs no remote call.
 
     When a node is down, only the features on that node stop working.
   ],
@@ -623,14 +612,13 @@
       >> "$PGDATA/pg_hba.conf"
     ```
   ],
-  code-size: 10pt,
   [
     PostgreSQL runs on two nodes, both on the backend network. One is the primary and the other is a standby. Every change on the primary is copied to the standby as it happens. Replication is set up through:
 
-    - _wal\_level=replica_: the primary streams its write-ahead log (WAL), the record of every change, to the standby
-    - _init-primary.sh_: creates the `replicator` role and allows replication logins from both database addresses, so either node can copy from the other
-    - _pg\_basebackup -R_: clones the primary, then writes `standby.signal` and the primary's address, so the copy starts as a standby and follows the stream
-    - _named volumes_: each copy lives on its own volume, so a lost container does not lose its data
+    - _wal\_level=replica_: The primary streams its write-ahead log (WAL), the record of every change, to the standby.
+    - _init-primary.sh_: It creates the `replicator` role and allows replication logins from both database addresses, so either node can copy from the other.
+    - _pg\_basebackup -R_: It clones the primary, then writes `standby.signal` and the primary's address. That way the copy starts as a standby and follows the stream.
+    - _named volumes_: Each copy lives on its own volume, so losing a container does not lose its data.
 
     The two nodes are equal. Either one can be the primary.
   ],
@@ -672,15 +660,14 @@
         ?targetServerType=preferPrimary
     ```
   ],
-  code-size: 10pt,
   [
     A watchdog container is the only thing that promotes a node. The services then follow on their own:
 
-    - _real roles_: every 5 seconds it asks both nodes for their role, timeline and WAL position, so it remembers nothing and can restart at any time
-    - _newest data wins_: after 3 checks in a row with no primary (about 20 s) it promotes the standby with the highest timeline, a counter that goes up on every promotion, then the furthest WAL position
-    - _checked promotion_: `pg_promote(true, 30)` returns `t` only once the node really is primary; otherwise it retries on the next loop
-    - _preferPrimary_: each service's JDBC URL lists both hosts, so new connections go to whichever one is the primary
-    - _Hikari pool_: connections are replaced every 60 s, so none stay on a standby after a promotion
+    - _real roles_: Every 5 seconds, the watchdog asks both nodes for their role, timeline and WAL position. Because it remembers nothing, it can restart at any time.
+    - _newest data wins_: After 3 checks in a row with no primary, about 20 seconds, it promotes the standby with the highest timeline. The timeline is a counter that goes up on every promotion. On a tie, the standby furthest along in the WAL wins.
+    - _checked promotion_: `pg_promote(true, 30)` returns `t` only once the node really is primary. If it does not, the watchdog tries again on the next loop.
+    - _preferPrimary_: Each service's JDBC URL lists both hosts, so new connections go to whichever one is the primary.
+    - _Hikari pool_: Connections are replaced every 60 seconds, so none stay stuck on a standby after a promotion.
 
     One decider means two nodes never both promote themselves.
   ],
@@ -715,15 +702,14 @@
   fi
   start_as_standby          # unsure: read-only, the watchdog decides
   ```,
-  code-size: 10pt,
   [
     A node that comes back after a failover still holds its old files. Without a check, it would start as a second primary with stale data, and `preferPrimary` could send writes to it. This is called split brain. Every database node prevents it at startup:
 
-    - _peer's role and timeline_: one query; a dead peer makes it give up after 3 seconds
-    - _peer is primary_: a standby that is not ahead just reconnects and catches up; anything else copies the peer into a temp folder and only then replaces its old data
-    - _empty disk_: only .14 (`ALLOW_INIT`) may create a new database, and only when no peer answers
-    - _I was primary_: stay primary only if the peer is a standby on the same or an older timeline
-    - _anything else_: start read-only and let the watchdog choose
+    - _peer's role and timeline_: The node gets both with one query. If the peer is dead, the query gives up after 3 seconds.
+    - _peer is primary_: A standby that is not ahead just reconnects and catches up. Any other node copies the peer into a temp folder, and only then replaces its old data.
+    - _empty disk_: Only .14 may create a new database, because only it has `ALLOW_INIT` set. Even then, it does so only when no peer answers.
+    - _I was primary_: The node stays primary only if the peer is a standby on the same or an older timeline.
+    - _anything else_: The node starts read-only and lets the watchdog choose.
 
     A node only becomes primary on its own when it is sure it has the newest data.
   ],
@@ -735,13 +721,7 @@
   [One Full Failover Cycle],
   [
     #set text(size: 15pt)
-    #show table.cell.where(y: 0): set text(fill: white, weight: "bold")
-    #table(
-      columns: (0.6in, 1.5in, 1.3in, 1.3in, 1fr),
-      inset: (x: 12pt, y: 9pt),
-      align: left + horizon,
-      stroke: (bottom: 0.6pt + luma(200)),
-      fill: (x, y) => if y == 0 { code-bg } else { none },
+    #dark-table((0.6in, 1.5in, 1.3in, 1.3in, 1fr),
       table.header([Step], [Event], [.14], [.15], [What happens]),
       [0], [Start], [primary], [standby], [.15 streams every change from .14],
       [1], [.14 stops], [down], [*primary*], [The watchdog sees no primary for 3 checks and promotes .15],
@@ -759,14 +739,7 @@
 #wide-slide(
   [Design Choices and Limits],
   [
-    #set text(size: 14pt)
-    #show table.cell.where(y: 0): set text(fill: white, weight: "bold")
-    #table(
-      columns: (2.3in, 1fr, 1fr),
-      inset: (x: 12pt, y: 9pt),
-      align: left + horizon,
-      stroke: (bottom: 0.6pt + luma(200)),
-      fill: (x, y) => if y == 0 { code-bg } else { none },
+    #dark-table((2.3in, 1fr, 1fr), size: 14pt,
       table.header([Choice], [Why], [Cost]),
       [No automatic switch back], [Each switch means a few seconds of failed writes, and a node that failed once may fail again and keep taking the role back], [The roles stay swapped until a full reset with `docker compose down -v`],
       [Asynchronous replication], [Writes stay fast and keep working while the standby is down], [Writes in the last moment before a crash may not reach the standby],
@@ -782,13 +755,7 @@
   [Fault Tolerance Summary],
   [
     #set text(size: 15pt)
-    #show table.cell.where(y: 0): set text(fill: white, weight: "bold")
-    #table(
-      columns: (1.6in, 1fr, 1fr),
-      inset: (x: 12pt, y: 9pt),
-      align: left + horizon,
-      stroke: (bottom: 0.6pt + luma(200)),
-      fill: (x, y) => if y == 0 { code-bg } else { none },
+    #dark-table((1.6in, 1fr, 1fr),
       table.header([Node down], [What stops], [What keeps working]),
       [view], [The website, since it is the only entry point], [Every feature node and all data; the site returns when the view restarts],
       [auth], [New logins], [Signed-in users: courses and grades verify tokens themselves],
